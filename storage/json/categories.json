@@ -1,0 +1,119 @@
+[
+	{
+		"value": "advocacy_&_human_rights",
+		"description": "Advocacy & Human Rights"
+	},
+	{
+		"value": "animals",
+		"description": "Animals"
+	},
+        {
+		"value": "arts_&_culture",
+		"description": "Arts & Culture"
+	},
+	{
+		"value": "children_&_youth",
+		"description": "Children & Youth"
+	},
+	{
+		"value": "community",
+		"description": "Community"
+	},
+	{
+		"value": "computers_&_technology",
+		"description": "Computers & Technology"
+	},
+	{
+		"value": "education_&_literacy",
+		"description": "Education & Literacy"
+	},
+	{
+		"value": "health_&_medicine",
+		"description": "Health & Medicine"
+	},
+	{
+		"value": "seniors",
+		"description": "Seniors"
+	},
+	{
+		"value": "board_development",
+		"description": "Board Development"
+	},
+	{
+		"value": "crisis_support",
+		"description": "Crisis Support"
+	},
+	{
+		"value": "disaster_relief",
+		"description": "Disaster Relief"
+	},
+	{
+		"value": "emergency_&_safety",
+		"description": "Emergency & Safety"
+	},
+	{
+		"value": "employment",
+		"description": "Employment"
+	},
+	{
+		"value": "environment",
+		"description": "Environment"
+	},
+	{
+		"value": "faith_based",
+		"description": "Faith-Based"
+	},
+	{
+		"value": "homeless_&_housing",
+		"description": "Homeless & Housing"
+	},
+	{
+		"value": "hunger",
+		"description": "Hunger"
+	},
+	{
+		"value": "immigrants_&_refugees",
+		"description": "Immigrants & Refugees"
+	},
+	{
+		"value": "international",
+		"description": "International"
+	},
+	{
+		"value": "justice_&_legal",
+		"description": "Justice & Legal"
+	},
+	{
+		"value": "lgbtq+",
+		"description": "LGBTQ+"
+	},
+	{
+		"value": "media_&_broadcasting",
+		"description": "Media & Broadcasting"
+	},
+	{
+		"value": "people_with_disabilities",
+		"description": "People with Disabilities"
+	},
+	{
+		"value": "politics",
+		"description": "Politics"
+	},
+	{
+		"value": "race_&_ethnicity",
+		"description": "Race & Ethnicity"
+	},
+	{
+		"value": "sports_&_recreation",
+		"description": "Sports & Recreation"
+	},
+	{
+		"value": "veterans_&_military_families",
+		"description": "Veterans & Military Families"
+	},
+	{
+		"value": "women",
+		"description": "Women"
+	}
+
+]
