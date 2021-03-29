@@ -60,14 +60,14 @@ class OrganizationsController extends Controller
         $validator = Validator::make($request->all(),[
             'name' => 'required',
             'user_id' => 'required|exists:users,id|unique:organizations,user_id',
-            'mission' => 'present|string|nullable',
-            'description' => 'present|string|nullable',
-            'photo' => 'present|string|nullable',
-            'city' => 'present|nullable|exists:cities,name|string',
-            'website' => 'present|nullable|string|url',
-            'facebook' => 'present|nullable|string|url',
-            'linkedIn' => 'present|nullable|string|url',
-            'phone_number' => 'present|nullable|regex:/^[0-9\-\(\)\/\+\s]*$/'
+        //    'mission' => 'present|string|nullable',
+        //    'description' => 'present|string|nullable',
+        //    'photo' => 'present|string|nullable',
+        //    'city' => 'present|nullable|exists:cities,name|string',
+        //    'website' => 'present|nullable|url',
+        //    'facebook' => 'present|nullable|url',
+        //    'linkedIn' => 'present|nullable|url',
+         //   'phone_number' => 'present|nullable|regex:/^[0-9\-\(\)\/\+\s]*$/'
         ]);
 
         if ($validator->fails()) {
@@ -96,9 +96,11 @@ class OrganizationsController extends Controller
             'photo' => 'sometimes|nullable|url',
             //'county' => 'sometimes|exists:countries,name'
             'city' => 'sometimes|nullable|exists:cities,name|string',
-            'website' => 'sometimes|nullable|string|url',
-            'facebook' => 'sometimes|nullable|string|url',
-            'linkedIn' => 'sometimes|nullable|string|url',
+            'website' => 'sometimes|nullable',
+            'facebook' => 'sometimes|nullable',
+            'linkedIn' => 'sometimes|nullable',
+            'twitter' => 'sometimes|nullable',
+            'instagram' => 'sometimes|nullable',
             'phone_number' => 'sometimes|nullable|regex:/^[0-9\-\(\)\/\+\s]*$/'
         ]);
 
@@ -235,6 +237,18 @@ class OrganizationsController extends Controller
         }
 
         return $this->organizationService->deleteComment($request);
+    }
+
+    public function getOrganizationContacts(Request $request, $uuid) {
+        $request->merge(['uuid' => $uuid]);
+        $validator = Validator::make($request->all(),[
+            'uuid' => 'required|exists:organizations,uuid',
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->messages(),403);
+        }
+
+        return $this->organizationService->getOrganizationContacts($request);
     }
 
 }

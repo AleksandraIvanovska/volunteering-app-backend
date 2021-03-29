@@ -43,6 +43,10 @@ $api->version('v1', function ($api) {
                 $api->get('/languageLevels','Resources\ResourcesController@getLanguageLevels');
                 $api->get('/userRoles', 'Resources\ResourcesController@getUserRoles');
                 $api->get('/nationalities', 'Resources\ResourcesController@getNationalities');
+                $api->get('/countries', 'Resources\ResourcesController@getCountries');
+                $api->get('/cities', 'Resources\ResourcesController@getCities');
+                $api->get('/durations', 'Resources\ResourcesController@getDurations');
+                $api->get('/greatFor', 'Resources\ResourcesController@getGreatFor');
             });
 
             $api->group(['prefix' => 'events'], function ($api) {
@@ -58,6 +62,7 @@ $api->version('v1', function ($api) {
                 $api->post('/','Organizations\OrganizationsController@create');
                 $api->put('/{uuid}','Organizations\OrganizationsController@update');
                 $api->delete('/{uuid}','Organizations\OrganizationsController@destroy');
+                $api->get('/{uuid}/contacts','Organizations\OrganizationsController@getOrganizationContacts');
 
                 $api->group(['prefix' => '/{uuid}/assets'], function ($api) {
                     //$api->get('/', 'Organizations\OrganizationsController@getAllAssets');
@@ -177,6 +182,11 @@ $api->version('v1', function ($api) {
                     $api->delete('/{uuid}', 'VolunteeringEvents\VolunteeringEventsController@deleteVolunteerInvitation');
                 });
 
+            });
+
+            $api->group(['prefix' => 'users'], function ($api) {
+                $api->get('/isUserOrganization', 'Users\UsersController@isUserOrganization');
+                $api->get('/isUserVolunteer', 'Users\UsersController@isUserVolunteer');
             });
 
         });

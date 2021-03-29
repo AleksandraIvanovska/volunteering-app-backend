@@ -13,7 +13,7 @@ class EventRequirements extends Model
     public $timestamps=true;
     public $incrementing=true;
 
-    protected $fillable=[
+    protected $fillable = [
         'uuid',
         'event_id',
         'driving_license',
@@ -24,7 +24,7 @@ class EventRequirements extends Model
         'other'
     ];
 
-    protected $dates=[
+    protected $dates = [
        'created_at',
        'updated_at'
     ];

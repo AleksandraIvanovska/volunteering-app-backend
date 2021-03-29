@@ -61,6 +61,10 @@ class EventLocationService
             $event_location->update(['postal_code' => $request['postal_code']]);
         }
 
+        return [
+            "message" => "Volunteering Event Location has been successfully updated"
+        ];
+
         return $event_location;
     }
 

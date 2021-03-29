@@ -9,6 +9,7 @@ trait HasRoleTrait
 {
     public function isVolunteer($user) {
         if(!$user->relationLoaded('role')) {
+
             $user->load('role');
         }
         if(!empty($user->role)) {

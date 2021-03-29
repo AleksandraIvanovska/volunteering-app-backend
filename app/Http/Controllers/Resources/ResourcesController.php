@@ -90,6 +90,26 @@ class ResourcesController extends Controller
         return $this->resourcesService->getNationalities($request);
     }
 
+    public function getCountries(Request $request) {
+        return $this->resourcesService->getCountries($request);
+    }
+
+    public function getCities(Request $request) {
+        return $this->resourcesService->getCities($request);
+    }
+
+
+
+    public function getDurations(Request $request) {
+        return $this->resourcesService->getDurations($request);
+    }
+
+    public function getGreatFor(Request $request) {
+        return $this->resourcesService->getGreatFor($request);
+    }
+
+
+
 
 
 }

@@ -24,7 +24,9 @@ class Organization extends Model
         'facebook',
         'linkedIn',
         'phone_number',
-        'user_id'
+        'user_id',
+        'twitter',
+        'instagram'
 
     ];
 

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Volunteers\Transformers;
 use App\LanguageLevel;
 use App\Roles;
 use App\Volunteer;
+use App\VolunteerEventAttendance;
 use League\Fractal\TransformerAbstract;
 use function App\Helpers\isDate;
 use Carbon\Carbon;
@@ -15,7 +16,6 @@ class VolunteersTransformer extends TransformerAbstract
 {
 
     public function transform($volunteer) {
-        //return $volunteer;
         return [
             'uuid' => $volunteer->uuid,
             'user_id' => $volunteer->user_id,
@@ -32,20 +32,23 @@ class VolunteersTransformer extends TransformerAbstract
             'asset' => isset($volunteer->asset) ? $this->transformAsset($volunteer->asset) : null,
             'facebook' => isset($volunteer->facebook) ? $volunteer->facebook : null,
             'twitter' => isset($volunteer->twitter) ? $volunteer->twitter : null,
+            'instagram' => isset($volunteer->instagram) ? $volunteer->instagram : null,
             'linkedIn' => isset($volunteer->linkedIn) ? $volunteer->linkedIn : null,
             'skype' => isset($volunteer->skype) ? $volunteer->skype : null,
             'phone_number' => isset($volunteer->phone_number) ? $volunteer->phone_number : null,
             'my_causes' => isset($volunteer->my_causes) ? $volunteer->my_causes : null,
             'location' => isset($volunteer->location) ? $this->transformLocation($volunteer->location) : null,
             'skills' => isset($volunteer->skills) ? $volunteer->skills : null,
-            'comments' => isset($volunteer->user->commentReceiver) ? $this->transformComments($volunteer->user->commentReceiver) : null,
+            //'comments' => isset($volunteer->user->commentReceiver) ? $this->transformComments($volunteer->user->commentReceiver) : null,
+            'comments' => $this->transformComments($volunteer),
             'educations' => isset($volunteer->educations) ? $this->transformEducations($volunteer->educations) : null,
             'experiences' => isset($volunteer->experiences) ? $this->transformExperiences($volunteer->experiences) : null,
             'languages' => isset($volunteer->languages) ? $this->transformLanguageLevels($volunteer->languages) : null,
             'favoriteEvents' => isset($volunteer->favoriteEvents) ? $this->transformEvents($volunteer->favoriteEvents) : null,
             'favoriteOrganizations' => isset($volunteer->favoriteOrganizations) ? $this->transformFavoriteOrganizations($volunteer->favoriteOrganizations) : null,
             'eventAttendance' => isset($volunteer->eventAttendance) ? $this->transformEvents($volunteer->eventAttendance) : null,
-            'eventInvitations' => isset($volunteer->eventInvitations) ? $this->transformInvitedEvents($volunteer->eventInvitations) : null
+            'eventInvitations' => isset($volunteer->eventInvitations) ? $this->transformInvitedEvents($volunteer->eventInvitations, $volunteer->id) : null,
+            'bind_name' =>  $volunteer->name . ' - ' . (isset($volunteer->location) ? $volunteer->location->name . ', ' .  $volunteer->location['country']['name'] : null)
 
         ];
     }
@@ -66,16 +69,32 @@ class VolunteersTransformer extends TransformerAbstract
         ];
     }
 
-    public function transformComments($comments) {
-        return $comments->map(function ($item) {
-            return $this->transformComment($item);
-        });
+    public function transformComments($volunteer) {
+        $comments = $volunteer->user->commentReceiver;
+        $response= collect();
+        foreach ($comments as $comment) {
+            $createdAt = Carbon::parse($comment['created_at']);
+            $response->push([
+                'comment_id' => $comment->id,
+                'comment_uuid' => $comment->uuid,
+                'title' => (($comment->creator) ? $comment->creator->name : 'Unknown user') . '<strong>  left a comment</strong> ',
+                'body' => $comment->description,
+                'created_date' => $createdAt->format('M d Y'),
+                'creator' => ($comment->creator) ? $comment->creator->name : null,
+                'creator_id' => $comment->creator_id ?? null
+            ]);
+        }
+        return $response;
+
+//        return $comments->map(function ($item) {
+//            return $this->transformComment($item);
+//        });
     }
 
     public function transformComment($comment) {
         return [
                 'comment_id' => $comment->id,
-                'title' => (($comment->creator->name) ? $comment->creator->name : 'Unknown user') . '<strong>  left a comment</strong> ',
+                'title' => (($comment->creator) ? $comment->creator->name : 'Unknown user') . '<strong>  left a comment</strong> ',
                 'body' => $comment->description,
                 'created_date' => $comment->created_at
         ];
@@ -108,6 +127,7 @@ class VolunteersTransformer extends TransformerAbstract
 
     public function transformExperience($experience) {
         return [
+            'uuid' => $experience->uuid,
             'experience_id' => $experience->id,
             'job_title' => $experience->job_title,
             'company_name' => $experience->company_name,
@@ -129,10 +149,12 @@ class VolunteersTransformer extends TransformerAbstract
 
     public function transformLanguageLevel($language) {
         return [
+            'language_uuid' => $language->pivot->uuid,
             'language_id' => $language->id,
             'language' => $language->language,
             //'level' => LanguageLevel::where('id', $language['pivot']['language_id'])->value('description')
-            'level' => $language->pivot->languageLevel['description']
+            'level' => $language->pivot->languageLevel['value'],
+            'level_description' => $language->pivot->languageLevel['description']
         ];
     }
 
@@ -185,13 +207,19 @@ class VolunteersTransformer extends TransformerAbstract
             ];
     }
 
-    public function transformInvitedEvents($events) {
-        return $events->map(function ($item){
-            return $this->transformInvitedEvent($item);
-        });
+    public function transformInvitedEvents($events, $volunteer_id) {
+        return $events->map(function ($item) use ($volunteer_id) {
+           if (!VolunteerEventAttendance::where('event_id', $item->id)->where('volunteer_id', $volunteer_id)->exists()) {
+                return $this->transformInvitedEvent($item);
+            }
+        })
+            ->filter()->values()->all();
     }
 
     public function transformInvitedEvent($event) {
+
+        $attended = VolunteerEventAttendance::where('event_id', $event->id)->exists();
+
 
         return [
             'event_id' => $event->id,
@@ -209,9 +237,10 @@ class VolunteersTransformer extends TransformerAbstract
                 'city' => $event->volunteeringLocation['location']['name'],
                 'country' => $event->volunteeringLocation['location']['country']['name']
             ] : null,
-            'status' => $event->pivot->statusType['description'],
+            'status' => isset($event->pivot->statusType) ? $event->pivot->statusType['description'] : null,
             'start_date' => isset($event->start_date) ? $event->start_date : null,
-            'end_date' => isset($event->end_date) ? $event->end_date : null
+            'end_date' => isset($event->end_date) ? $event->end_date : null,
+            'attended' => $attended ?? 0
         ];
 
 //        $data=collect($this->transformEvent($event));

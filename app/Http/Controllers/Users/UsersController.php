@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Users;
 
+use App\Roles;
+use App\Support\HasRoleTrait;
 use App\User;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Http\Request;
@@ -14,7 +16,7 @@ use Illuminate\Support\Facades\Validator;
 class UsersController extends Controller
 {
 
-    use Helpers;
+    use Helpers, HasRoleTrait;
     /**
      * Display a listing of the resource.
      *
@@ -45,7 +47,8 @@ class UsersController extends Controller
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8',
-            'role_id' => 'required|exists:roles,id' //maybe change this later and send me role ex.volunteer/organization
+           // 'role_id' => 'required|exists:roles,id' //maybe change this later and send me role ex.volunteer/organization
+            'role' => 'required|exists:roles,value'
         ]);
 
         if ($validator->fails()){
@@ -54,7 +57,8 @@ class UsersController extends Controller
 
         $validateData = [
             'name' => $request->name,
-            'role_id' => $request->role_id,
+            //'role_id' => $request->role_id,
+            'role_id' => Roles::where('value', $request->role)->value('id'),
             'email' => $request->email,
             'password' => $request->password,
             'password_confirmation' => $request->password_confirmation,
@@ -82,23 +86,24 @@ class UsersController extends Controller
             return response()->json($validator->messages(),400);
         }
 
-//        return $this->userService->loginUser($request);
-
-//        $loginData = $request->validate([
-//            'email' => 'required|email',
-//            'password' => 'required|min:8'
-//        ]);
         $loginData = [
             'email' => $request->email,
             'password' => $request->password,
         ];
 
         if (!auth()->attempt($loginData)){
-            return response(['message' => 'Invalid credentials']);
+            return response(['message' => 'Invalid credentials'],400);
         }
 
         $accessToken=auth()->user()->createToken('authToken')->accessToken;
-        return response(['user' => auth()->user(), 'access_token' => $accessToken]);
+
+        if ($this->isVolunteer(auth()->user())) {
+            $uuid = auth()->user()->volunteer['uuid'];
+        } else {
+            $uuid = auth()->user()->organization['uuid'];
+        }
+
+        return response(['user' => auth()->user(), 'access_token' => $accessToken, 'uuid' => $uuid]);
     }
 
     public function forgotPassword(Request $request)
@@ -114,75 +119,14 @@ class UsersController extends Controller
         return $forgotPassword;
     }
 
-
-    public function index()
-    {
-        //
+    public function isUserOrganization(Request $request) {
+        return $this->userService->isUserOrganization($request);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+    public function isUserVolunteer(Request $request) {
+        return $this->userService->isUserVolunteer($request);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
 }

@@ -17,6 +17,7 @@ class VolunteeringEventsTransformer
             'organization' => isset($volunteeringEvent->organization) ? $this->transformOrganization($volunteeringEvent->organization) : null,
             'category' => isset($volunteeringEvent->category) ? $volunteeringEvent->category : null,
             'is_virtual' => isset($volunteeringEvent->is_virtual) ? $volunteeringEvent->is_virtual : null,
+            'virtual_info' => isset($volunteeringEvent->virtual_info) ? $volunteeringEvent->virtual_info : null,
             'ongoing' => isset($volunteeringEvent->ongoing) ? $volunteeringEvent->ongoing : null,
             'start_date' => isset($volunteeringEvent->start_date) ? $volunteeringEvent->start_date : null,
             'end_date' => isset($volunteeringEvent->end_date) ? $volunteeringEvent->end_date : null,
@@ -60,7 +61,8 @@ class VolunteeringEventsTransformer
                 'city_id' => $organization->location['id'],
                 'city' => $organization->location['name'],
                 'country' => $organization->location->country['name']
-            ]
+            ],
+            'user_id' => $organization->user_id
         ];
     }
 
@@ -127,17 +129,21 @@ class VolunteeringEventsTransformer
 
     public function transformInvitedVolunteer($volunteer) {
         return [
+            'volunteer_uuid' => $volunteer['uuid'],
+            'volunteer_id' => $volunteer['id'],
             'name' => $volunteer['name'],
             'dob' => $volunteer['dob'],
             'email' => $volunteer->user['email'],
             'gender' => $volunteer['gender'],
-            'location' => [
+            'location' => isset($volunteer->location) ? [
                 'city_id' => $volunteer->location['id'],
                 'city' => $volunteer->location['name'],
                 'country' => $volunteer->location['country']['name']
-            ],
+            ] : null,
             'status' => $volunteer->pivot->status,
-            'status_id' => $volunteer->pivot->status_id
+            'status_id' => $volunteer->pivot->status_id,
+            'application_uuid' => $volunteer->pivot->uuid,
+            'user_id' => $volunteer->user_id
         ];
     }
 

@@ -36,6 +36,10 @@ class ContactsService
             'dob' => $request['dob']
         ]);
 
+        return [
+            "message" => "Contact has been successfully created"
+        ];
+
         return $contact;
     }
 
@@ -94,6 +98,10 @@ class ContactsService
     public function destroy($request) {
         $contact = $this->model->byUuid($request['uuid'])->first();
         $contact->delete();
+
+        return [
+            "message" => "Contact has been successfully deleted"
+        ];
         return response()->noContent();
     }
 

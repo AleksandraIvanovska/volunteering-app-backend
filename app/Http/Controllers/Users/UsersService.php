@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers\Users;
 
+use App\Support\HasRoleTrait;
 use Laravel\Passport\Client;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ use Illuminate\Events\Dispatcher;
 class UsersService
 {
 
-    use Helpers;
+    use Helpers, HasRoleTrait;
 
     private $dispatcher;
 
@@ -75,4 +76,19 @@ class UsersService
         UserForgotPassword::dispatch($user);
         return $this->response->created();
     }
+
+    public function isUserOrganization($request) {
+        if ($this->isOrganization(Auth::user())) {
+            return true;
+        }
+        else return false;
+    }
+
+    public function isUserVolunteer(Request $request) {
+        if ($this->isVolunteer(Auth::user())) {
+            return true;
+        }
+        else return false;
+    }
+
 }

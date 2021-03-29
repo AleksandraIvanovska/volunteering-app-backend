@@ -50,26 +50,26 @@ class VolunteersController extends Controller
         $validator=Validator::make($request->all(),[
             'user_id' => 'required|exists:users,id|unique:volunteers,user_id',
             'first_name' => 'required|string',
-            'middle_name' => 'present|nullable|string',
-            'last_name' =>'present|nullable|string',
-            //'gender_id' => 'present|nullable|exists:resources,id,type,gender_type',
-            'gender' => 'present|nullable|string|exists:resources,value,type,gender_type',
-            'photo' => 'present|nullable|string',
-            //'nationality_id' => 'present|nullable|exists:countries,id',
-            'nationality' => 'present|nullable|exists:countries,nationality',
-            //'location_id' => 'present|nullable|exists:cities,id',
-            'city' => 'present|nullable|exists:cities,name|string',
-            'phone_number' => 'present|nullable|regex:/^[0-9\-\(\)\/\+\s]*$/',
-            'dob' => 'present|nullable',
-            'cv' => 'present|nullable|exists:assets,id',
-            'facebook' => 'present|nullable|string|url',
-            'linkedIn' => 'present|nullable|string|url',
-            'twitter' => 'present|nullable|string|url',
-            'skype' => 'present|nullable|string',
-            'my_causes' => 'present|nullable|array',
-           // 'my_causes.*.value' => 'required_with:my_causes|string',
-            'skills' => 'present|nullable|array',
-          //  'skills.*.value' => 'required_with:skills|string'
+//            'middle_name' => 'present|nullable|string',
+//            'last_name' =>'present|nullable|string',
+//            //'gender_id' => 'present|nullable|exists:resources,id,type,gender_type',
+//            'gender' => 'present|nullable|string|exists:resources,value,type,gender_type',
+//            'photo' => 'present|nullable|string',
+//            //'nationality_id' => 'present|nullable|exists:countries,id',
+//            'nationality' => 'present|nullable|exists:countries,nationality',
+//            //'location_id' => 'present|nullable|exists:cities,id',
+//            'city' => 'present|nullable|exists:cities,name|string',
+//            'phone_number' => 'present|nullable|regex:/^[0-9\-\(\)\/\+\s]*$/',
+//            'dob' => 'present|nullable',
+//            'cv' => 'present|nullable|exists:assets,id',
+//            'facebook' => 'present|nullable|string|url',
+//            'linkedIn' => 'present|nullable|string|url',
+//            'twitter' => 'present|nullable|string|url',
+//            'skype' => 'present|nullable|string',
+//            'my_causes' => 'present|nullable|array',
+//           // 'my_causes.*.value' => 'required_with:my_causes|string',
+//            'skills' => 'present|nullable|array',
+//          //  'skills.*.value' => 'required_with:skills|string'
         ]);
 
         if ($validator->fails()) {
@@ -142,9 +142,9 @@ class VolunteersController extends Controller
         $validator=Validator::make($request->all(),[
             'volunteer_uuid' => 'required|exists:volunteers,uuid',
             'language' => 'required|exists:languages,language',
-            'level' => 'present',
-            'level.value' => 'required_with:level|exists:language_level,value',
-            'level.description' => 'required_with:level|exists:language_level,description'
+           // 'level' => 'present',
+            'level' => 'required|exists:language_level,value',
+           // 'level.description' => 'required_with:level|exists:language_level,description'
         ]);
 
         if ($validator->fails()) {
@@ -157,11 +157,11 @@ class VolunteersController extends Controller
     public function updateVolunteerLanguage(Request $request,$uuid) {
         $request->merge(['uuid' => $uuid]);
         $validator=Validator::make($request->all(),[
-            'uuid' => 'required|exists:volunteer_languages,uuid',
+            'uuid' => 'sometimes|exists:volunteer_languages,uuid',
             'language' => 'filled|exists:languages,language',
-            'level' => 'sometimes',
-            'level.value' => 'required_with:level|exists:language_level,value',
-            'level.description' => 'required_with:level|exists:language_level,description'
+            //'level' => 'sometimes',
+            'level.value' => 'sometimes|exists:language_level,value',
+            //'level.description' => 'required_with:level|exists:language_level,description'
         ]);
 
         if ($validator->fails()) {

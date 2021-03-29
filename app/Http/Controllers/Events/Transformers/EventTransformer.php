@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Events\Transformers;
 
 use App\Events;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use League\Fractal\TransformerAbstract;
 
@@ -39,7 +40,8 @@ class EventTransformer extends TransformerAbstract
                 'is_route' => $event->is_route,
                 'navigation_url' => $event->navigate_url,
                 'is_read' => $event->pivot->is_read,
-                'created_at' => $event->created_at,
+                'created_at' => Carbon::parse($event->created_at)->format('M d Y'),
+
               //  'image_url' => ($event->owner) ? $event->owner->contact->photo : null
             ];
         });

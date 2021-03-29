@@ -117,4 +117,34 @@ class ResourcesService
         }
     }
 
+    public function getCountries(Request $request) {
+        if ($request->has('name')) {
+            return Countries::where('name','like','%' . $request->input('name') . '%')->get();
+        }
+        else {
+            return Countries::get();
+        }
+    }
+
+    public function getCities(Request $request) {
+        if ($request->has('name')) {
+            return Cities::where('name','like','%' . $request->input('name') . '%')->get();
+        }
+        else if ($request->has('state')) {
+            return Cities::where('state_id', Countries::where('name','like' , '%' . $request->input('state') . '%')->value('id'))->get();
+        }
+        else {
+            return Cities::get();
+        }
+    }
+
+    public function getDurations(Request $request) {
+        return Resources::where('type', 'duration_type')->get();
+    }
+
+    public function getGreatFor(Request $request) {
+        return Resources::where('type', 'great_for_type')->get();
+    }
+
+
 }

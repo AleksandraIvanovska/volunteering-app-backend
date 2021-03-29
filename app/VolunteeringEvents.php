@@ -43,14 +43,15 @@ class VolunteeringEvents extends Model
       'benefits',
       'skills_needed',
       'tags',
-      'notes'
+      'notes',
+        'virtual_info'
+
     ];
 
     protected $dates=[
         'created_at',
         'updated_at',
-        'deleted_at',
-        'deadline'
+        'deleted_at'
     ];
 
     public function organization() {
@@ -120,7 +121,7 @@ class VolunteeringEvents extends Model
     public function volunteerInvitations() {
         return $this->belongsToMany('App\Volunteer','volunteer_event_invitations','event_id','volunteer_id')
             ->using('App\VolunteerEventInvitations')
-            ->withPivot('status_id','status')
+            ->withPivot('status_id','status','uuid')
             ->withTimestamps();
     }
 }

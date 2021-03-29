@@ -94,12 +94,12 @@ class VolunteerEducationController extends Controller
     public function destroy(Request $request,$uuid)
     {
         $request->merge(['uuid' => $uuid]);
-        $validator=Validator::make($request->all(),[
+        $validator = Validator::make($request->all(),[
             'uuid' => 'required|exists:volunteer_education,uuid'
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->messages(),403);
+            return response()->json($validator->messages(),400);
         }
 
         return $this->educationService->destroy($request);

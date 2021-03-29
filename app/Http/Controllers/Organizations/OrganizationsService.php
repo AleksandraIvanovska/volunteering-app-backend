@@ -4,14 +4,17 @@
 namespace App\Http\Controllers\Organizations;
 
 use App\Asset;
+use App\Category;
 use App\Cities;
 use App\Comments;
+use App\Contact;
 use App\Http\Controllers\Organizations\Transformers\OrganizationsTransformer;
 use App\Organization;
 use App\OrganizationAsset;
 use App\OrganizationCategories;
 use App\Support\HasRoleTrait;
 use App\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +39,35 @@ class OrganizationsService
     }
 
     public function getAll(Request $request) {
-        $organizations = $this->model->get();
+        $organizations = $this->model->query();
+
+        if ($request->has('search')) {
+            $organizations->where('name', 'like', '%' . $request->input('search') . '%')
+                ->orWhere('description', 'like', '%' . $request->input('search') . '%');
+        }
+
+        if ($request->has('country')) {
+            $organizations->whereHas('location.country', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->input('country') . '%');
+            });
+        }
+
+        if ($request->has('city')) {
+            $organizations->whereHas('location', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->input('city') . '%');
+            });
+        }
+
+        if ($request->has('category')) {
+            $organizations->whereHas('categories', function ($q) use ($request) {
+                $q->where('description', 'like', '%' . $request->input('category') . '%');
+            });
+        }
+
+        $organizations = $organizations->get();
+        return $organizations->map(function ($item) {
+            return $this->getByUuid($item->uuid);
+        });
         return $organizations;
     }
 
@@ -108,7 +139,7 @@ class OrganizationsService
         }
 
         if (array_key_exists('city', $data)) {
-            $city_id=Cities::where('name',$data['city'])->value('id');
+            $city_id = Cities::where('name',$data['city'])->value('id');
             $organization->update(['location_id' => $city_id]);
         }
 
@@ -128,6 +159,25 @@ class OrganizationsService
             $organization->update(['phone_number' => $data['phone_number']]);
         }
 
+        if (!empty($data['category'])) {
+            $organization->categories()->detach();
+            foreach ($data['category'] as $category) {
+                $category_id = Category::where('value', $category)->value('id');
+                if ($category_id) {
+                    $organization->categories()->attach($category_id);
+                } else {
+                    $new_category = Category::create([
+                        'value' => $category,
+                        'description' => $category
+                    ]);
+                    $organization->categories()->attach($new_category->id);
+                }
+            }
+        }
+
+        return [
+            "message" => "Organization has been successfully updated"
+        ];
 
         $response=[];
         $response['data'] = $this->transformer->transform($organization);
@@ -177,19 +227,26 @@ class OrganizationsService
 
     public function createComment($request) {
         $comment = "";
-        $organization_id = Organization::where('uuid' , $request['organization_uuid'])->value('id');
-        if ($this->isVolunteer(Auth::user())) {
+        $organization_id = Organization::where('uuid' , $request['organization_uuid'])->value('user_id');
+      //  if ($this->isVolunteer(Auth::user())) {
             $comment = Comments::create([
                 'description' => $request['description'],
                 'user_id' => $organization_id,
                 'creator_id' => Auth::user()->id
             ]);
-        }
+       // }
 
         NotificationComment::dispatch(Auth::user(), $organization_id);
 
         //Send email and notification
-        return $comment;
+        $createdAt = Carbon::parse($comment['created_at']);
+        return [
+            'comment_id' => $comment->id,
+            'comment_uuid' => $comment->uuid,
+            'body' => $comment->description,
+            'created_date' => $createdAt->format('M d Y'),
+            'creator' => ($comment->creator) ? $comment->creator->name : null
+        ];
     }
 
     public function updateComment($request) {
@@ -207,10 +264,16 @@ class OrganizationsService
     public function deleteComment($request) {
         $comment = Comments::where('uuid', $request['comment_uuid'])->first();
 
-        if ($comment->creator_id == Auth::user()->volunteer['id']) {
+      //  if ($comment->creator_id == Auth::user()->volunteer['id']) {
             $comment->delete();
-        }
+      //  }
 
-        return response()->noContent();
+        return response(['message' => 'Comment successfully deleted']);
+
+    }
+
+
+    public function getOrganizationContacts($request) {
+        return Contact::where('organization_id', Organization::where('uuid', $request['uuid'])->value('id'))->get();
     }
 }

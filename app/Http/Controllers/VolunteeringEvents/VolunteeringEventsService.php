@@ -49,13 +49,69 @@ class VolunteeringEventsService
     }
 
     public function getAll(Request $request) {
-        return $this->model->get();
+        $events = $this->model->query();
+
+        if ($request->has('search')) {
+            $events->where('title', 'like', '%' . $request->input('search') . '%')
+                ->orWhere('description', 'like', '%' . $request->input('search') . '%');
+        }
+
+        if ($request->has('country')) {
+            $events->whereHas('volunteeringLocation.location.country', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->input('country') . '%');
+            });
+        }
+
+            if ($request->has('city')) {
+                $events->whereHas('volunteeringLocation.location', function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->input('city') . '%');
+                });
+            }
+
+        if ($request->has('category')) {
+            $events->whereHas('category', function ($q) use ($request) {
+                $q->where('description', 'like', '%' . $request->input('category') . '%');
+            });
+        }
+
+        if ($request->has('organization')) {
+            $events->whereHas('organization', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->input('organization') . '%');
+            });
+        }
+
+        if ($request->has('virtual')) {
+            $events->where('is_virtual', true);
+        }
+
+        if ($request->has('start_date')) {
+            $events->where('start_date', $request->input('start_date'));
+        }
+
+
+        if ($request->has('duration')) {
+            $events->whereHas('duration', function ($q) use ($request) {
+                $q->where('description', 'like', '%' . $request->input('duration') . '%');
+            });
+        }
+
+        if ($request->has('great_for')) {
+            $events->whereHas('greatFor', function ($q) use ($request) {
+                $q->where('description', 'like', '%' . $request->input('great_for') . '%');
+            });
+        }
+
+        $events = $events->get();
+        return $events->map(function ($item) {
+            return $this->getByUuid($item->uuid);
+        });
     }
 
-    public function getByUuid(Request $request) {
-        $volunteeringEvent=$this->model->byUuid($request['uuid'])->with([
+    public function getByUuid($uuid) {
+
+        $volunteeringEvent=$this->model->byUuid($uuid)->with([
             'organization' => function($query) {
-                $query->select('id','uuid','name','description','location_id','website');
+                $query->select('id','uuid','name','description','location_id','website', 'user_id');
             },
             'category' => function($query) {
                 $query->select('id','value','description');
@@ -106,17 +162,17 @@ class VolunteeringEventsService
             'organization_id' => Organization::where('name',$request['organization'])->value('id'),
             'category_id' => Category::where('value', $request['category']['value'])->value('id'),
             'is_virtual' => $request['is_virtual'],
-            'ongoing' => $request['ongoing'],
+            'ongoing' => 0, //e 1 ako e Happening now
             'start_date' => $request['start_date'],
             'end_date' => $request['end_date'],
             'estimated_hours' => $request['estimated_hours'],
             'average_hours_per_day' => $request['average_hours_per_day'],
             'duration_id' => Resources::where('value', $request['duration']['value'])->value('id'),
             'deadline' => $request['deadline'],
-            'expired_id' => Resources::where('value',$request['expired']['value'])->value('id'),
+            'expired_id' => Resources::where('type','expired_type')->where('value','active')->value('id'),
             'status_id' => Resources::where('value',$request['status']['value'])->value('id'),
             'volunteers_needed' => $request['volunteers_needed'],
-            'spaces_available' => $request['spaces_available'],
+            'spaces_available' => $request['volunteers_needed'],
             'great_for_id' => Resources::where('value',$request['great_for']['value'])->value('id'),
             'group_size_id' => Resources::where('value',$request['group_size']['value'])->value('id'),
             'sleeping' => $request['sleeping'],
@@ -125,7 +181,8 @@ class VolunteeringEventsService
             'benefits' => $request['benefits'],
             'skills_needed' => (is_array($request['skills_needed']) && !empty($request['skills_needed'])) ? json_encode($request['skills_needed']) : null,
             'tags' => (is_array($request['tags']) && !empty($request['tags'])) ? json_encode($request['tags']) : null,
-            'notes' => $request['notes']
+            'notes' => $request['notes'],
+            'virtual_info' => $request['virtual_info']
         ]);
 
         return $volunteeringEvent;
@@ -147,7 +204,7 @@ class VolunteeringEventsService
         }
 
         if (isset($request['category'])) {
-            $volunteering_event->update(['category_id' => Category::where('value', $request['category']['value'])->value('id')]);
+            $volunteering_event->update(['category_id' => Category::where('value', $request['category'])->value('id')]);
         }
 
         if (isset($request['is_virtual'])) {
@@ -175,7 +232,7 @@ class VolunteeringEventsService
         }
 
         if (isset($request['duration'])) {
-            $volunteering_event->update(['duration_id' => Resources::where('value',$request['duration']['value'])->value('id')]);
+            $volunteering_event->update(['duration_id' => Resources::where('value',$request['duration'])->value('id')]);
         }
 
         if (isset($request['deadline'])) {
@@ -183,11 +240,20 @@ class VolunteeringEventsService
         }
 
         if (isset($request['expired'])) {
-            $volunteering_event->update(['expired_id' => Resources::where('value',$request['expired']['value'])->value('id')]);
+            $volunteering_event->update(['expired_id' => Resources::where('value',$request['expired'])->value('id')]);
         }
 
         if (isset($request['status'])) {
-            $volunteering_event->update(['status_id' => Resources::where('value', $request['status']['value'])->value('id')]);
+            $volunteering_event->update(['status_id' => Resources::where('value', $request['status'])->value('id')]);
+            if ('happening_now' == $request['status']) {
+                $volunteering_event->update(['ongoing' => 1]);
+            }
+            if ('happening_now' != $request['status']) {
+                $volunteering_event->update(['ongoing' => 0]);
+            }
+            if ('completed' == $request['status'] || 'canceled' == $request['status']) {
+                $volunteering_event->update(['expired_id' => Resources::where('value', 'finished')->where('type', 'expired_type')->value('id')]);
+            }
         }
 
         if (isset($request['volunteers_needed'])) {
@@ -199,11 +265,11 @@ class VolunteeringEventsService
         }
 
         if (isset($request['great_for'])) {
-            $volunteering_event->update(['great_for_id' => Resources::where('value', $request['great_for']['value'])->value('id')]);
+            $volunteering_event->update(['great_for_id' => Resources::where('value', $request['great_for'])->value('id')]);
         }
 
         if (isset($request['group_size'])) {
-            $volunteering_event->update(['group_size_id' => Resources::where('value', $request['group_size']['value'])->value('id')]);
+            $volunteering_event->update(['group_size_id' => Resources::where('value', $request['group_size'])->value('id')]);
         }
 
         if (isset($request['sleeping'])) {
@@ -234,10 +300,19 @@ class VolunteeringEventsService
             $volunteering_event->update(['notes' => $request['notes']]);
         }
 
+        if (isset($request['virtual_info'])) {
+            $volunteering_event->update(['virtual_info' => $request['virtual_info']]);
+        }
+
         //return $volunteering_event;
-        $response=[];
-        $response['data'] = $this->transformer->transform($volunteering_event);
-        return $response;
+//        $response=[];
+//        $response['data'] = $this->transformer->transform($volunteering_event);
+//        $response['data']['message'] = "Volunteering Event has been successfully updated";
+//        return $response;
+
+        return [
+            "message" => "Volunteering Event has been successfully updated"
+        ];
 
     }
 
@@ -245,6 +320,9 @@ class VolunteeringEventsService
         $volunteering_event = $this->model->byUuid($request['uuid'])->first();
         $volunteering_event->delete();
         //DELETE CONNECTED TABLES - LOCATION, REQUIREMENTS , EVENT_ASSETS
+        return [
+            "message" => "Volunteering Event has been successfully deleted"
+        ];
         return response()->noContent();
     }
 
@@ -256,6 +334,12 @@ class VolunteeringEventsService
             'event_id' => $event_id
         ]);
 
+        $binary_data = Storage::disk('local')->get($asset->path);
+
+        return [
+            "message" => "Asset Created!"
+        ];
+
         return transform_event_asset($event_asset, $asset);
     }
 
@@ -265,6 +349,10 @@ class VolunteeringEventsService
         $asset->delete();
         Storage::delete($asset['path']);
         $event_asset->delete();
+
+        return [
+            "message" => "Asset Deleted!"
+        ];
 
         return response()->noContent();
     }
@@ -305,10 +393,13 @@ class VolunteeringEventsService
     public function createVolunteerInvitation($request) {
         $volunteering_event = $this->model->byUuid($request['event_uuid'])->first();
         $volunteer_status = Resources::where('value', $request['status']['value'])->first();
+
+        $volunteer_id = Volunteer::where('user_id',$request['volunteer_id'])->value('id');
       //  return $status;
         $volunteer_event_invitation = VolunteerEventInvitations::create([
             'event_id' => $volunteering_event['id'],
-            'volunteer_id' => $request['volunteer_id'],
+            //'volunteer_id' => $request['volunteer_id'],
+            'volunteer_id' => $volunteer_id,
             'status_id' => $volunteer_status['id'],
             'status' => $volunteer_status['description']
         ]);
@@ -342,6 +433,10 @@ class VolunteeringEventsService
 //        }
 
 
+        return [
+            "message" => "Volunteer Application Created"
+        ];
+
         return $volunteer_event_invitation;
 
     }
@@ -349,7 +444,8 @@ class VolunteeringEventsService
 
     public function updateVolunteerInvitation($request) {
         $volunteer_invitation = VolunteerEventInvitations::byUuid($request['uuid'])->first();
-        $volunteer_status = Resources::where('value', $request['status']['value'])->first();
+        $volunteer_status = Resources::where('value', $request['status'])->first();
+
 
         if (isset($request['status'])) {
             $volunteer_invitation->update(['status' => $volunteer_status['description'], 'status_id' => $volunteer_status['id']]);
@@ -360,7 +456,7 @@ class VolunteeringEventsService
 
         //IF APPROVED BY VOLUNTEER SEND  TO ORGANIZATION
         $volunteering_event = $this->model->where('id', $volunteer_invitation['event_id'])->first();
-        if ('invitation_approved' != $request['status']['value'] && 'invitation_rejected' != $request['status']['value'] && 'invitation_canceled' != $request['status']['value']) {
+        if ('invitation_approved' != $request['status'] && 'invitation_rejected' != $request['status'] && 'invitation_canceled' != $request['status']) {
             NotificationStatusUpdateByOrganization::dispatch($volunteering_event, $volunteer_status, Auth::user(), Volunteer::find($volunteer_invitation['volunteer_id']));
         }
         else {
@@ -368,16 +464,28 @@ class VolunteeringEventsService
             NotificationStatusUpdateByVolunteer::dispatch($volunteering_event, $volunteer_status, Auth::user(), $user->organization['user']['id']);
         }
 
+        if ('invitation_approved' == $request['status'] || 'request_approved' == $request['status']) {
+            if ($volunteering_event->volunteers_needed){
+                $num_volunteers = ($volunteering_event->volunteers_needed)-1;
+                $volunteering_event->update(['volunteers_needed' => $num_volunteers]);
+            }
 
-        //IF ATTENDED CALL ANOTHER ROUTE OR CREATE NEW RECORD HERE
-        if ('attended' == $request['status']['value']) {
+        }
+
+            //IF ATTENDED CALL ANOTHER ROUTE OR CREATE NEW RECORD HERE
+        if ('attended' == $request['status']) {
             $volunteer_event_attendance = VolunteerEventAttendance::create([
                 'event_id' => $volunteer_invitation->event_id,
                 'volunteer_id' => $volunteer_invitation->volunteer_id
             ]);
 
+
             //SEND EMAIL AND NOTIFICATION
         }
+
+        return [
+            "message" => "Application Status Updated!"
+        ];
 
 
         return $volunteer_invitation;
