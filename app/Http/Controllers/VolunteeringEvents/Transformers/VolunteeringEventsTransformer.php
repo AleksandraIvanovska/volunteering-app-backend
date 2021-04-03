@@ -57,11 +57,11 @@ class VolunteeringEventsTransformer
             'title' => $organization->name,
             'description' => $organization->description,
             'website' => isset($organization->website) ? $organization->website : null,
-            'location' => [
+            'location' => isset($organization->location) ? [
                 'city_id' => $organization->location['id'],
                 'city' => $organization->location['name'],
                 'country' => $organization->location->country['name']
-            ],
+            ] : null,
             'user_id' => $organization->user_id
         ];
     }

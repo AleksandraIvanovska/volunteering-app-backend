@@ -11,24 +11,25 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
-class VolunteerMadeRequest implements ShouldQueue
+class VolunteerEventStatusWasUpdatedByOrganizationEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 5;
 
-    private $platform_url, $mailAddress, $platformName, $record, $owner, $user;
+    private $platform_url, $mailAddress, $platformName, $volunteering_event, $status, $owner, $volunteer;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($record, $owner, $user)
+    public function __construct($volunteering_event, $status, $owner, $volunteer)
     {
-        $this->record = $record;
+        $this->volunteering_event = $volunteering_event;
+        $this->status = $status;
         $this->owner = $owner;
-        $this->user = $user;
+        $this->volunteer = $volunteer;
         $this->mailAddress = Config::get('mail.from.address');
         $this->platformName = Config::get('values.platform_name');
         $this->platform_url = Config::get('values.platform_url');
@@ -41,14 +42,15 @@ class VolunteerMadeRequest implements ShouldQueue
      */
     public function handle()
     {
-        $this->sendEmail($this->user);
+        $user = $this->volunteer->user;
+        $this->sendEmail($user);
     }
 
     public function sendEmail($user) {
         try {
             $data = array(
                 'name' => $user['name'],
-                'mailMessage' => 'Volunteer <strong>' . $this->owner->name . '</strong> has requested to volunteer on your event <strong>' . $this->record['title'] . '</strong>',
+                'mailMessage' => '<strong>' . $this->owner['name'] . '</strong> has changed your applications status on the event <strong>' . $this->volunteering_event->title . '</strong> to <strong>' . $this->status->description . '</strong>',
                 'button' => "",
                 'footer' => null
             );
@@ -62,4 +64,5 @@ class VolunteerMadeRequest implements ShouldQueue
             Log::error($e->getMessage());
         }
     }
+
 }

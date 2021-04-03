@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers\Volunteers;
 
+use App\Organization;
+use App\Volunteer;
+use App\VolunteerFavoriteEvents;
+use App\VolunteerFavoriteOrganizations;
+use App\VolunteeringEvents;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -187,7 +192,13 @@ class VolunteersController extends Controller
     public function createFavoriteOrganization(Request $request) {
         $validator=Validator::make($request->all(),[
             'volunteer_uuid' => 'required|exists:volunteers,uuid',
-            'organization_name' => 'required|exists:organizations,name'
+            'organization_uuid' => ['required', 'exists:organizations,uuid',
+                function ($attribute, $value, $fail) use ($request) {
+                    if (VolunteerFavoriteOrganizations::where('volunteer_id', Volunteer::byUuid($request['volunteer_uuid'])->value('id'))->where('organization_id', Organization::byUuid($request['organization_uuid'])->value('id'))->exists()) {
+                        return $fail('This organization is already in your favorite organizations list.');
+                    }
+                }
+            ]
         ]);
 
         if ($validator->fails()) {
@@ -217,7 +228,13 @@ class VolunteersController extends Controller
     public function createFavoriteEvent(Request $request) {
         $validator=Validator::make($request->all(),[
             'volunteer_uuid' => 'required|exists:volunteers,uuid',
-            'event_name' => 'required|exists:volunteering_events,title'
+            'event_uuid' => ['required', 'exists:volunteering_events,uuid',
+                function ($attribute, $value, $fail) use ($request) {
+                    if (VolunteerFavoriteEvents::where('volunteer_id', Volunteer::where('uuid', $request['volunteer_uuid'])->value('id'))->where('event_id', VolunteeringEvents::where('uuid', $request['event_uuid'])->value('id'))->exists()) {
+                        return $fail('This event is already in your favorite events list.');
+                    }
+                }
+                ]
         ]);
 
         if ($validator->fails()) {

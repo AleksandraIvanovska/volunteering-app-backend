@@ -5,6 +5,8 @@ namespace App\Http\Controllers\VolunteeringEvents;
 use App\Asset;
 use App\EventAsset;
 use App\EventContact;
+use App\Volunteer;
+use App\VolunteerEventInvitations;
 use App\VolunteeringEvents;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
@@ -286,8 +288,14 @@ class VolunteeringEventsController extends Controller
    public function createVolunteerInvitation(Request $request) {
        $validator = Validator::make($request->all(),[
            'event_uuid' => 'required|exists:volunteering_events,uuid',
-          // 'volunteer_name' => 'required|exists:volunteers,name',
-        //   'volunteer_id' => 'required|exists:volunteers,id',
+           'volunteer_id' => ['required','exists:users,id',
+               function($attribute, $value ,$fail) use ($request) {
+                   $volunteer_id = Volunteer::where('user_id',$request['volunteer_id'])->value('id');
+                   $event_id = VolunteeringEvents::where('uuid',$request['event_uuid'])->value('id');
+                   if (VolunteerEventInvitations::where('volunteer_id', $volunteer_id)->where('event_id', $event_id)->exists()) {
+                           return $fail("This volunteer already has an application for this event");
+                   }
+               }],
            'status' => 'required',
            'status.value' => 'required_with:status|exists:resources,value,type,event_volunteer_status_type'
        ]);

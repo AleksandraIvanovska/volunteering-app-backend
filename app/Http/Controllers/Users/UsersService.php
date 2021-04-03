@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers\Users;
 
+use App\Jobs\UserForgotPassword;
 use App\Support\HasRoleTrait;
 use Laravel\Passport\Client;
 use Illuminate\Support\Facades\Auth;
@@ -74,7 +75,12 @@ class UsersService
     {
         $user = $this->model->where('email', $request->get('email'))->firstOrFail();
         UserForgotPassword::dispatch($user);
+
+        return [
+            "message" => "Reset link was sent to email"
+        ];
         return $this->response->created();
+
     }
 
     public function isUserOrganization($request) {

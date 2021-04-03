@@ -182,7 +182,8 @@ class VolunteersTransformer extends TransformerAbstract
                 'country' => $event->volunteeringLocation['location']['country']['name']
             ] : null,
             'start_date' => isset($event->start_date) ? $event->start_date : null,
-            'end_date' => isset($event->end_date) ? $event->end_date : null
+            'end_date' => isset($event->end_date) ? $event->end_date : null,
+            'favorite_event_uuid' => $event->pivot->uuid
         ];
     }
 
@@ -203,6 +204,7 @@ class VolunteersTransformer extends TransformerAbstract
                 'city' => $organization->location['name'],
                 'country' => $organization->location['country']['name']
              ] : null,
+            'favorite_organization_uuid' => $organization->pivot->uuid
 
             ];
     }

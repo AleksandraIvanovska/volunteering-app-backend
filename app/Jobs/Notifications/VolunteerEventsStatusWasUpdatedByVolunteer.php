@@ -37,7 +37,7 @@ class VolunteerEventsStatusWasUpdatedByVolunteer implements ShouldQueue
     public function handle()
     {
         $event = [
-            'title' => 'Volunteer<strong>' . $this->owner['name'] . '</strong> has changed their status on the event <strong>' . $this->volunteering_event->title . '</strong> to <strong>' . $this->status->description . '</strong>',
+            'title' => 'Volunteer <strong>' . $this->owner['name'] . '</strong> has changed their status on the event <strong>' . $this->volunteering_event->title . '</strong> to <strong>' . $this->status->description . '</strong>',
             'description' => null,
             'navigate_url' => "/volunteeringEvents/" . $this->volunteering_event->uuid,
             'type' => 'user',

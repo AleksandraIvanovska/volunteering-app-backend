@@ -307,9 +307,14 @@ class VolunteersService
         $volunteer_id = $this->model->byUuid($request['volunteer_uuid'])->value('id');
         $volunteer_favorite_organization=VolunteerFavoriteOrganizations::create([
             'volunteer_id' => $volunteer_id,
-            'organization_id' => Organization::where('name', $request['organization_name'])->value('id')
+            //'organization_id' => Organization::where('name', $request['organization_name'])->value('id')
+            'organization_id' => Organization::where('uuid', $request['organization_uuid'])->value('id')
+
         ]);
 
+        return [
+            "message" => "Organization added to favorite events"
+        ];
         return $volunteer_favorite_organization;
     }
 
@@ -317,6 +322,10 @@ class VolunteersService
     public function deleteFavoriteOrganization($request) {
         $volunteer_favorite_organization=VolunteerFavoriteOrganizations::byUuid($request['uuid'])->first();
         $volunteer_favorite_organization->delete();
+
+        return [
+            "message" => "Event removed from favorite organizations"
+        ];
         return response()->noContent();
     }
 
@@ -324,8 +333,13 @@ class VolunteersService
         $volunteer_id = $this->model->byUuid($request['volunteer_uuid'])->value('id');
         $volunteer_favorite_event = VolunteerFavoriteEvents::create([
             'volunteer_id' => $volunteer_id,
-            'event_id' => VolunteeringEvents::where('title',$request['event_name'])->value('id')
+           // 'event_id' => VolunteeringEvents::where('title',$request['event_name'])->value('id')
+            'event_id' => VolunteeringEvents::where('uuid',$request['event_uuid'])->value('id')
         ]);
+
+        return [
+            "message" => "Event added to favorite events"
+        ];
 
         return $volunteer_favorite_event;
     }
@@ -333,6 +347,10 @@ class VolunteersService
     public function deleteFavoriteEvent($request) {
         $volunteer_favorite_event=VolunteerFavoriteEvents::byUuid($request['uuid'])->first();
         $volunteer_favorite_event->delete();
+
+        return [
+            "message" => "Event removed from favorite events"
+        ];
         return response()->noContent();
     }
 

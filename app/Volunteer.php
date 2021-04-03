@@ -88,12 +88,14 @@ class Volunteer extends Model
     public function favoriteEvents() {
         return $this->belongsToMany('App\VolunteeringEvents','volunteer_favorite_events','volunteer_id','event_id')
             ->using('App\VolunteerFavoriteEvents')
+            ->withPivot('uuid')
             ->withTimestamps();
     }
 
     public function favoriteOrganizations() {
         return $this->belongsToMany('App\Organization','volunteer_favorite_organizations','volunteer_id','organization_id')
             ->using('App\VolunteerFavoriteOrganizations')
+            ->withPivot('uuid')
             ->withTimestamps();
     }
 
