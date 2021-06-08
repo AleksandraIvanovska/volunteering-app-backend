@@ -23,13 +23,17 @@ class EventLocationService
         $event_id = VolunteeringEvents::byUuid($request['event_uuid'])->value('id');
         $event_location = $this->model->create([
             'event_id' => $event_id,
-            'location_id' => Cities::where('name', $request['city'])->value('id'),
-            'address' => $request['address'],
-            'show_map' => $request['show_map'],
-            'longitude' => $request['longitude'],
-            'latitude' => $request['latitude'],
-            'postal_code' => $request['postal_code']
+            'location_id' => isset($request['city'])? Cities::where('name', $request['city'])->value('id') : null,
+            'address' => $request['address'] ?? null,
+            'show_map' => $request['show_map'] ?? null,
+            'longitude' => $request['longitude'] ?? null,
+            'latitude' => $request['latitude'] ?? null,
+            'postal_code' => $request['postal_code'] ?? null
         ]);
+
+        return [
+            "message" => "Volunteering Event Location has been successfully updated"
+        ];
 
         return $event_location;
     }

@@ -37,12 +37,12 @@ class EventLocationController extends Controller
                         }
                 }
             ],
-            'city' => 'required|string|exists:cities,name',
-            'address' => 'present|nullable|string',
-            'show_map' => 'present|nullable|boolean',
-            'longitude' => 'present|nullable|numeric',
-            'latitude' => 'present|nullable|numeric',
-            'postal_code' => 'present|nullable|string'
+            'city' => 'sometimes|string|exists:cities,name',
+            'address' => 'sometimes|nullable|string',
+            'show_map' => 'sometimes|nullable|boolean',
+            'longitude' => 'sometimes|nullable|numeric',
+            'latitude' => 'sometimes|nullable|numeric',
+            'postal_code' => 'sometimes|nullable|string'
         ]);
 
         if ($validator->fails()) {

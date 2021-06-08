@@ -213,6 +213,10 @@ class VolunteersService
             $volunteer->update(['skype' => $data['skype']]);
         }
 
+         if (isset($data['instagram'])) {
+             $volunteer->update(['instagram' => $data['instagram']]);
+         }
+
         if (isset($data['phone_number'])) {
             $volunteer->update(['phone_number' => $data['phone_number']]);
         }
@@ -313,7 +317,7 @@ class VolunteersService
         ]);
 
         return [
-            "message" => "Organization added to favorite events"
+            "message" => "Organization added to favorite organizations"
         ];
         return $volunteer_favorite_organization;
     }
@@ -324,7 +328,7 @@ class VolunteersService
         $volunteer_favorite_organization->delete();
 
         return [
-            "message" => "Event removed from favorite organizations"
+            "message" => "Organization removed from favorite organizations"
         ];
         return response()->noContent();
     }

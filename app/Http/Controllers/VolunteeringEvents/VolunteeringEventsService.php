@@ -6,9 +6,12 @@ namespace App\Http\Controllers\VolunteeringEvents;
 
 use App\Asset;
 use App\Category;
+use App\Cities;
 use App\Contact;
 use App\EventAsset;
 use App\EventContact;
+use App\EventLocation;
+use App\EventRequirements;
 use App\Http\Controllers\VolunteeringEvents\Transformers\VolunteeringEventsTransformer;
 use App\Jobs\Emails\VolunteerAttendedToEventEmail;
 use App\Jobs\Emails\VolunteerEventStatusWasUpdatedByOrganizationEmail;
@@ -147,7 +150,7 @@ class VolunteeringEventsService
             'assets',
             'contacts',
             'requirements' => function($query) {
-                $query->select('id','event_id','driving_license','minimum_age','languages','orientation','background_check','other');
+                $query->select('id','uuid' ,'event_id','driving_license','minimum_age','languages','orientation','background_check','other');
             },
             'volunteerFavorites',
             'volunteerAttendance',
@@ -159,7 +162,6 @@ class VolunteeringEventsService
     }
 
     public function create(Request $request) {
-       // return $request;
         $volunteeringEvent = $this->model->create([
             'title' => $request['title'],
             'description' => isset($request['description']) ? $request['description'] : null,
@@ -175,7 +177,7 @@ class VolunteeringEventsService
             'duration_id' => Resources::where('value', $request['duration']['value'])->value('id'),
             'deadline' => $request['deadline'],
             'expired_id' => Resources::where('type','expired_type')->where('value','active')->value('id'),
-            'status_id' => Resources::where('value',$request['status']['value'])->value('id'),
+            'status_id' => Resources::where('value', $request['status']['value'])->value('id'),
             'volunteers_needed' => $request['volunteers_needed'],
             'spaces_available' => $request['volunteers_needed'],
             'great_for_id' => Resources::where('value',$request['great_for']['value'])->value('id'),
@@ -187,8 +189,32 @@ class VolunteeringEventsService
             'skills_needed' => (is_array($request['skills_needed']) && !empty($request['skills_needed'])) ? json_encode($request['skills_needed']) : null,
             'tags' => (is_array($request['tags']) && !empty($request['tags'])) ? json_encode($request['tags']) : null,
             'notes' => $request['notes'],
-            'virtual_info' => $request['virtual_info']
+            'virtual_info' => $request['virtual_info'] ?? null
         ]);
+
+        if (isset($request['location']) && isset($request['location']['city'])) {
+            EventLocation::create([
+                'event_id' => $volunteeringEvent->id,
+                'location_id' => Cities::where('name', $request['location']['city'])->value('id'),
+                'address' => $request['location']['address'] ?? null,
+                'show_map' => $request['location']['show_map'] ?? null,
+                'longitude' => $request['location']['longitude'] ?? null,
+                'latitude' => $request['location']['latitude'] ?? null,
+                'postal_code' => $request['location']['postal_code'] ?? null
+            ]);
+        }
+
+        if (isset($request['requirements'])) {
+            EventRequirements::create([
+                'event_id' => $volunteeringEvent->id,
+                'driving_license' => isset($request['requirements']['driving_license']) ? $request['requirements']['driving_license'] : null,
+                'minimum_age' => isset($request['requirements']['min_age']) ? $request['requirements']['min_age'] : null,
+                'languages' => isset($request['requirements']['languages']) ? json_encode($request['requirements']['languages']) : null,
+                'orientation' => isset($request['requirements']['orientation']) ? $request['requirements']['orientation'] : null,
+                'background_check' => isset($request['requirements']['background_check']) ? $request['requirements']['background_check'] : null,
+                'other' => isset($request['requirements']['other']) ? json_encode($request['requirements']['other']) : null
+            ]);
+        }
 
         return [
             "message" => "Volunteering Event has been successfully created"
@@ -352,10 +378,11 @@ class VolunteeringEventsService
     }
 
     public function deleteEventAsset($request) {
-        $event_asset=EventAsset::byUuid($request['event_asset_uuid'])->first();
-        $asset=Asset::where('id', $event_asset['asset_id'])->first();
-        $asset->delete();
-        Storage::delete($asset['path']);
+        $event_asset = EventAsset::byUuid($request['event_asset_uuid'])->first();
+//        $asset = Asset::where('id', $event_asset['asset_id'])->first();
+//        $asset->delete();
+//        Storage::delete($asset['path']);
+
         $event_asset->delete();
 
         return [

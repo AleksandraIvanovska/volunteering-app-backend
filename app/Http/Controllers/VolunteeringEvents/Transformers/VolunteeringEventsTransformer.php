@@ -93,6 +93,7 @@ class VolunteeringEventsTransformer
     public function transformAsset($asset) {
         return [
             'uuid' => $asset->uuid,
+            'event_asset_uuid' => $asset->pivot->uuid,
             'url' => url('app/' . $asset['path']),
             'asset_name' => $asset->asset_name
         ];

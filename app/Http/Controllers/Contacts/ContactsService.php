@@ -92,6 +92,10 @@ class ContactsService
         if (isset($request['dob'])) {
             $contact->update(['dob' => $request['dob']]);
         }
+
+        return [
+            "message" => "Contact has been successfully updated"
+        ];
         return $contact;
     }
 

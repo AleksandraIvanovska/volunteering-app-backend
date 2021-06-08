@@ -136,6 +136,7 @@ class OrganizationsService
 
         if (array_key_exists('photo', $data)) {
             $organization->update(['photo' => $data['photo']]);
+            $organization->save();
         }
 
         if (array_key_exists('city', $data)) {

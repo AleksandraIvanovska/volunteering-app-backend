@@ -36,7 +36,8 @@ class Volunteer extends Model
         'my_causes',
         'location_id',
         'skills',
-        'instagram'
+        'instagram',
+        'deleted_at'
     ];
 
     protected $dates = [

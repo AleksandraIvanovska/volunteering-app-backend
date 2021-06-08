@@ -93,6 +93,7 @@ class VolunteeringEvents extends Model
     public function assets() {
         return $this->belongsToMany('App\Asset','event_asset','event_id','asset_id')
             ->using('App\EventAsset')
+            ->withPivot('uuid')
             ->withTimestamps();
     }
 

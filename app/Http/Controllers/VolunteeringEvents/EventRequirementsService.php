@@ -31,6 +31,10 @@ class EventRequirementsService
             'other' => isset($request['other']) ? json_encode($request['other']) : null
         ]);
 
+        return [
+            "message" => "Event requirements has been successfully updated"
+        ];
+
         return $requirements;
     }
 
@@ -60,6 +64,9 @@ class EventRequirementsService
             $requirements->update(['other' => $request['other']]);
         }
 
+        return [
+            "message" => "Event requirements has been successfully updated"
+        ];
         return $requirements;
     }
 

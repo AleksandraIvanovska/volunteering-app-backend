@@ -27,12 +27,12 @@ class EventRequirementsController extends Controller
     {
         $validator = Validator::make($request->all(),[
             'event_uuid' => 'required|exists:volunteering_events,uuid',
-            'driving_license' => 'present|nullable|string',
-            'minimum_age' => 'present|integer|nullable',
-            'languages' => 'present|nullable|array',
-            'orientation' => 'present|string|nullable',
-            'background_check' => 'present|boolean|nullable',
-            'other' => 'present|array|nullable'
+            'driving_license' => 'sometimes|nullable|string',
+            'minimum_age' => 'sometimes|integer|nullable',
+            'languages' => 'sometimes|nullable|array',
+            'orientation' => 'sometimes|string|nullable',
+            'background_check' => 'sometimes|boolean|nullable',
+            'other' => 'sometimes|array|nullable'
         ]);
 
         if ($validator->fails()) {

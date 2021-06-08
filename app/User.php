@@ -46,12 +46,12 @@ class User extends Authenticatable
 
     public function organization()
     {
-        return $this->hasOne('App\Organization', 'user_id');
+        return $this->hasOne('App\Organization', 'user_id')->withTrashed();;
     }
 
     public function volunteer()
     {
-        return $this->hasOne('App\Volunteer','user_id');
+        return $this->hasOne('App\Volunteer','user_id')->withTrashed();;
     }
 
     public function commentCreator() {
