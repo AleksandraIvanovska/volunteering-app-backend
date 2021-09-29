@@ -25,10 +25,11 @@ class EventRequirementsService
             'event_id' => $event->id,
             'driving_license' => isset($request['driving_license']) ? $request['driving_license'] : null,
             'minimum_age' => isset($request['minimum_age']) ? $request['minimum_age'] : null,
-            'languages' => isset($request['languages']) ? json_encode($request['languages']) : null,
+//            'languages' => isset($request['languages']) ? json_encode($request['languages']) : null,
+            'languages' => isset($request['languages']) ? $request['languages'] : null,
             'orientation' => isset($request['orientation']) ? $request['orientation'] : null,
             'background_check' => isset($request['background_check']) ? $request['background_check'] : null,
-            'other' => isset($request['other']) ? json_encode($request['other']) : null
+            'other' => isset($request['other']) ? $request['other'] : null
         ]);
 
         return [
@@ -49,7 +50,7 @@ class EventRequirementsService
         }
 
         if ($request->has('languages')) {
-            $requirements->update(['languages' => json_encode($request['languages'])]);
+            $requirements->update(['languages' => $request['languages']]);
         }
 
         if ($request->has('orientation')) {

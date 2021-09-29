@@ -111,8 +111,8 @@ class VolunteersController extends Controller
             'twitter' => 'sometimes|nullable|string|url',
             'skype' => 'sometimes|nullable|string',
             'phone_number' => 'sometimes|nullable|regex:/^[0-9\-\(\)\/\+\s]*$/',
-            'my_causes' => 'sometimes|nullable|array',
-            'skills' => 'sometimes|nullable|array',
+            'my_causes' => 'sometimes|nullable',
+            'skills' => 'sometimes|nullable',
             'city' => 'sometimes|nullable|exists:cities,name'
         ]);
 

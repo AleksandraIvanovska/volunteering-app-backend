@@ -186,7 +186,7 @@ class VolunteeringEventsService
             'food' => $request['food'],
             'transport' => $request['transport'],
             'benefits' => $request['benefits'],
-            'skills_needed' => (is_array($request['skills_needed']) && !empty($request['skills_needed'])) ? json_encode($request['skills_needed']) : null,
+            'skills_needed' => (is_array($request['skills_needed']) && !empty($request['skills_needed'])) ? $request['skills_needed'] : null,
             'tags' => (is_array($request['tags']) && !empty($request['tags'])) ? json_encode($request['tags']) : null,
             'notes' => $request['notes'],
             'virtual_info' => $request['virtual_info'] ?? null

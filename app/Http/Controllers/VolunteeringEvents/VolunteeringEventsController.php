@@ -81,7 +81,7 @@ class VolunteeringEventsController extends Controller
             'food' => 'present|nullable|string',
             'transport' => 'present|nullable|string',
             'benefits' => 'present|nullable|string',
-            'skills_needed' => 'present|nullable|array',
+            'skills_needed' => 'present|nullable',
             'tags' => 'present|nullable|array',
             'notes' => 'present|nullable|string'
         ]);
@@ -137,7 +137,7 @@ class VolunteeringEventsController extends Controller
             'food' => 'sometimes|nullable|string',
             'transport' => 'sometimes|nullable|string',
             'benefits' => 'sometimes|nullable|string',
-            'skills_needed' => 'sometimes|nullable|array',
+            'skills_needed' => 'sometimes|nullable',
             'tags' => 'sometimes|nullable|array',
             'notes' => 'sometimes|nullable|string'
         ]);

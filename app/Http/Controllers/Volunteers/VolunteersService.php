@@ -139,8 +139,8 @@ class VolunteersService
             'linkedIn' => $data['linkedIn'] ?? null,
             'skype' => $data['skype'] ?? null,
             'phone_number' => $data['phone_number'] ?? null,
-            'skills' => (isset($data['skills']) && is_array($data['skills']) && !empty($data['skills'])) ? json_encode($data['skills']) : null,
-            'my_causes' => (isset($data['my_causes']) && is_array($data['my_causes']) && !empty($data['my_causes'])) ? json_encode($data['my_causes']) : null
+            'skills' => (isset($data['skills']) && is_array($data['skills']) && !empty($data['skills'])) ? $data['skills'] : null,
+            'my_causes' => (isset($data['my_causes']) && is_array($data['my_causes']) && !empty($data['my_causes'])) ? $data['my_causes'] : null
 
         ]);
 
@@ -380,7 +380,8 @@ class VolunteersService
             'comment_uuid' => $comment->uuid,
             'body' => $comment->description,
             'created_date' => $createdAt->format('M d Y'),
-            'creator' => ($comment->creator) ? $comment->creator->name : null
+            'creator' => ($comment->creator) ? $comment->creator->name : null,
+            'creator_id' => Auth::user()->id
         ];
 
         return $comment;

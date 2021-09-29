@@ -29,10 +29,10 @@ class EventRequirementsController extends Controller
             'event_uuid' => 'required|exists:volunteering_events,uuid',
             'driving_license' => 'sometimes|nullable|string',
             'minimum_age' => 'sometimes|integer|nullable',
-            'languages' => 'sometimes|nullable|array',
+            'languages' => 'sometimes|nullable',
             'orientation' => 'sometimes|string|nullable',
             'background_check' => 'sometimes|boolean|nullable',
-            'other' => 'sometimes|array|nullable'
+            'other' => 'sometimes|nullable'
         ]);
 
         if ($validator->fails()) {
@@ -57,10 +57,10 @@ class EventRequirementsController extends Controller
             'uuid' => 'required|exists:event_requirements,uuid',
             'driving_license' => 'sometimes|nullable|string',
             'minimum_age' => 'sometimes|integer|nullable',
-            'languages' => 'sometimes|nullable|array',
+            'languages' => 'sometimes|nullable',
             'orientation' => 'sometimes|string|nullable',
             'background_check' => 'sometimes|boolean|nullable',
-            'other' => 'sometimes|array|nullable'
+            'other' => 'sometimes|nullable'
         ]);
 
         if ($validator->fails()) {

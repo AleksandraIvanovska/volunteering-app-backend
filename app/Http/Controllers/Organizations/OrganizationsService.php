@@ -246,7 +246,8 @@ class OrganizationsService
             'comment_uuid' => $comment->uuid,
             'body' => $comment->description,
             'created_date' => $createdAt->format('M d Y'),
-            'creator' => ($comment->creator) ? $comment->creator->name : null
+            'creator' => ($comment->creator) ? $comment->creator->name : null,
+            'creator_id' => Auth::user()->id
         ];
     }
 
