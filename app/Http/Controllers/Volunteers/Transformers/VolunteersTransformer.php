@@ -28,7 +28,7 @@ class VolunteersTransformer extends TransformerAbstract
             'photo' => isset($volunteer->photo) ? $volunteer->photo : null,
             'genderType' => isset($volunteer->genderType) ? $volunteer->genderType : null,
             'nationality' => isset($volunteer->nationality) ? $volunteer->nationality : null,
-            'dob' => isset($volunteer->dob) ? $volunteer->dob : null,
+            'dob' => isset($volunteer->dob) ? Carbon::parse($volunteer->dob)->format('d-m-Y') : null,
             'asset' => isset($volunteer->asset) ? $this->transformAsset($volunteer->asset) : null,
             'facebook' => isset($volunteer->facebook) ? $volunteer->facebook : null,
             'twitter' => isset($volunteer->twitter) ? $volunteer->twitter : null,

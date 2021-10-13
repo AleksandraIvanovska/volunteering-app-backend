@@ -494,9 +494,9 @@ class VolunteeringEventsService
         }
 
         if ('invitation_approved' == $request['status'] || 'request_approved' == $request['status']) {
-            if ($volunteering_event->volunteers_needed){
-                $num_volunteers = ($volunteering_event->volunteers_needed)-1;
-                $volunteering_event->update(['volunteers_needed' => $num_volunteers]);
+            if ($volunteering_event->spaces_available){
+                $num_volunteers = ($volunteering_event->spaces_available)-1;
+                $volunteering_event->update(['spaces_available' => $num_volunteers]);
             }
         }
 

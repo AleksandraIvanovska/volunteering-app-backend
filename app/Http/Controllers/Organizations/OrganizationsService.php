@@ -76,7 +76,9 @@ class OrganizationsService
                 'user' => function($query) {
                     $query->select('id','email','role_id');
                 },
-                'user.commentReceiver',
+                'user.commentReceiver' => function ($query) {
+                    $query->orderBy('created_at', 'desc');
+                },
                 'location.country' => function ($query) {
                     $query->select('id','name','countries.id','countries.name');
                 },
@@ -150,6 +152,14 @@ class OrganizationsService
 
         if (array_key_exists('facebook', $data)) {
             $organization->update(['facebook' => $data['facebook']]);
+        }
+
+        if (array_key_exists('twitter', $data)) {
+            $organization->update(['twitter' => $data['twitter']]);
+        }
+
+        if (array_key_exists('instagram', $data)) {
+            $organization->update(['instagram' => $data['instagram']]);
         }
 
         if (array_key_exists('linkedIn',$data)) {
