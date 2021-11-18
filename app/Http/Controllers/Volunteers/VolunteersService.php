@@ -59,7 +59,7 @@ class VolunteersService
             });
         }
 
-        $volunteers = $volunteers->get();
+        $volunteers = $volunteers->orderBy('created_at', 'asc')->get();
         return $volunteers->map(function ($item) {
             return $this->getByUuid($item->uuid);
         });

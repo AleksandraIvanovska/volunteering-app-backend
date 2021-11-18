@@ -64,7 +64,7 @@ class OrganizationsService
             });
         }
 
-        $organizations = $organizations->get();
+        $organizations = $organizations->orderBy('created_at', 'asc')->get();
         return $organizations->map(function ($item) {
             return $this->getByUuid($item->uuid);
         });
