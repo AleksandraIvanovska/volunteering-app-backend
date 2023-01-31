@@ -8,6 +8,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 
@@ -15,19 +17,23 @@ class VolunteerWasInvited implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 1;
+    public $tries = 5;
 
-    private $record, $authUser;
+    private $record, $authUser, $volunteer, $platform_url, $mailAddress, $platformName;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($record, $authUser)
+    public function __construct($record, $authUser, $volunteer)
     {
         $this->record = $record;
         $this->authUser = $authUser;
+        $this->volunteer = $volunteer;
+        $this->mailAddress = Config::get('mail.from.address');
+        $this->platformName = Config::get('values.platform_name');
+        $this->platform_url = Config::get('values.platform_url');
     }
 
     /**
@@ -37,31 +43,31 @@ class VolunteerWasInvited implements ShouldQueue
      */
     public function handle()
     {
-        $user = Volunteer::where('id', $this->record['volunteer_id'])->with(['user'])->first();
-      //  print_r(json_encode($user));
+        $user = $this->volunteer->user;
         $this->sendEmail($user);
-      //  print_r($user->user['email']);
     }
 
     public function sendEmail($user) {
         try {
 
             $data = array(
-                'name' => $user->user['name'],
-                'mailMessage' => "You have been invited ....",
+                'name' => $user['name'],
+                'mailMessage' => "You have been invited to volunteer to the event <strong>{$this->record->title}</strong> by organization <strong>{$this->authUser->name}</strong>",
+                'button' => "",
+                'footer' => null
             );
-            print_r($user->user['email']);
 
-//            Mail::send('MailTemplate', $data, function ($message) use ($user) {
-//
-//                $message->from('noreply@aleksandra.com', 'Aleksandra Ivanovska');
-//
-//                $message->to($user->user['email'], $user->user['name'])->subject("SOME TEXT");
-//
-//            });
+
+            Mail::send('MailTemplate', $data, function ($message) use ($user) {
+
+                $message->from($this->mailAddress, $this->authUser->name);
+
+                 $message->to('aleksandraivanovska02@gmail.com', $user->name)->subject("Volunteer Invitation");
+
+            });
         }
         catch (\Exception $e) {
-            print_r($e);
+            Log::error($e->getMessage());
         }
     }
 }

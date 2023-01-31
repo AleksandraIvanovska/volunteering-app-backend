@@ -11,22 +11,23 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
-class VolunteerMadeRequest implements ShouldQueue
+class VolunteerEventStatusWasUpdatedByVolunteerEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 5;
 
-    private $platform_url, $mailAddress, $platformName, $record, $owner, $user;
+    private $volunteering_event, $status, $owner, $user, $platform_url, $mailAddress, $platformName;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($record, $owner, $user)
+    public function __construct($volunteering_event, $status, $owner, $user)
     {
-        $this->record = $record;
+        $this->volunteering_event = $volunteering_event;
+        $this->status = $status;
         $this->owner = $owner;
         $this->user = $user;
         $this->mailAddress = Config::get('mail.from.address');
@@ -48,7 +49,7 @@ class VolunteerMadeRequest implements ShouldQueue
         try {
             $data = array(
                 'name' => $user['name'],
-                'mailMessage' => 'Volunteer <strong>' . $this->owner->name . '</strong> has requested to volunteer on your event <strong>' . $this->record['title'] . '</strong>',
+                'mailMessage' => 'Volunteer <strong>' . $this->owner['name'] . '</strong> has changed their status on the event <strong>' . $this->volunteering_event->title . '</strong> to <strong>' . $this->status->description . '</strong>',
                 'button' => "",
                 'footer' => null
             );

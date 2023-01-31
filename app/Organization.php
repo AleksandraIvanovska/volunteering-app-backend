@@ -18,6 +18,7 @@ class Organization extends Model
         'uuid',
         'name',
         'mission',
+        'photo',
         'description',
         'location_id',
         'website',
@@ -26,8 +27,8 @@ class Organization extends Model
         'phone_number',
         'user_id',
         'twitter',
-        'instagram'
-
+        'instagram',
+        'deleted_at'
     ];
 
     protected $dates = [
@@ -39,8 +40,7 @@ class Organization extends Model
     protected $hidden = [
         'user_id',
         'created_at',
-        'updated_at',
-        'deleted_at'
+        'updated_at'
     ];
 
     //USER

@@ -59,7 +59,7 @@ class VolunteersService
             });
         }
 
-        $volunteers = $volunteers->get();
+        $volunteers = $volunteers->orderBy('created_at', 'asc')->get();
         return $volunteers->map(function ($item) {
             return $this->getByUuid($item->uuid);
         });
@@ -71,7 +71,9 @@ class VolunteersService
             'user' => function($query) {
                 $query->select('id','email','role_id');
             },
-            'user.commentReceiver',
+            'user.commentReceiver' => function ($query) {
+                $query->orderBy('created_at', 'desc');
+            },
             'location' => function($query) {
                 $query->select('id','name','state_id');
             },
@@ -85,10 +87,10 @@ class VolunteersService
                 $query->get();
             },
             'educations' => function($query) {
-                $query->select('id', 'uuid' ,'volunteer_id','institution_name','degree_name','major','start_date','graduation_date');
+                $query->select('id', 'uuid' ,'volunteer_id','institution_name','degree_name','major','start_date','graduation_date')->orderBy('start_date', 'desc');;
             },
             'experiences' => function($query) {
-                $query->select('id', 'uuid' ,'volunteer_id','job_title','company_name','location_id','start_date','end_date');
+                $query->select('id', 'uuid' ,'volunteer_id','job_title','company_name','location_id','start_date','end_date')->orderBy('start_date', 'desc');
             },
             'experiences.location' => function($query) {
                 $query->select('id','name','state_id');
@@ -139,8 +141,8 @@ class VolunteersService
             'linkedIn' => $data['linkedIn'] ?? null,
             'skype' => $data['skype'] ?? null,
             'phone_number' => $data['phone_number'] ?? null,
-            'skills' => (isset($data['skills']) && is_array($data['skills']) && !empty($data['skills'])) ? json_encode($data['skills']) : null,
-            'my_causes' => (isset($data['my_causes']) && is_array($data['my_causes']) && !empty($data['my_causes'])) ? json_encode($data['my_causes']) : null
+            'skills' => (isset($data['skills']) && is_array($data['skills']) && !empty($data['skills'])) ? $data['skills'] : null,
+            'my_causes' => (isset($data['my_causes']) && is_array($data['my_causes']) && !empty($data['my_causes'])) ? $data['my_causes'] : null
 
         ]);
 
@@ -158,74 +160,78 @@ class VolunteersService
         $volunteer=$this->model->byUuid($data['uuid'])->first();
         $user=User::find($volunteer['user_id']);
 
-        if (isset($data['first_name'])) {
+        if (array_key_exists('first_name',$data)) {
             $name=$data['first_name'] . " " . $volunteer['middle_name'] . " " . $volunteer['last_name'];
             $volunteer->update(['first_name' => $data['first_name'],'name' => $name]);
             $user->update(['name' => $name]);
         }
 
-        if (isset($data['middle_name'])) {
+        if (array_key_exists('middle_name',$data)) {
             $name=$volunteer['first_name'] . " " . $data['middle_name'] . " " . $volunteer['last_name'];
             $volunteer->update(['middle_name' => $data['middle_name'], 'name' => $name]);
             $user->update(['name' => $name]);
         }
 
-        if (isset($data['last_name'])) {
+        if (array_key_exists('last_name',$data)) {
             $name=$volunteer['first_name'] . " " . $volunteer['middle_name'] . " " . $data['last_name'];
             $volunteer->update(['last_name' => $data['last_name'], 'name' => $name]);
             $user->update(['name' => $name]);
         }
 
-        if (isset($data['gender'])) {
+        if (array_key_exists('gender',$data)) {
             $volunteer->update(['gender' => Resources::where('value', $data['gender'])->value('description'), 'gender_id' => Resources::where('value', $data['gender'])->value('id')]);
         }
 
-        if (isset($data['photo'])) {
+        if (array_key_exists('photo',$data)) {
             $volunteer->update(['photo' => $data['photo']]);
         }
 
-        if (isset($data['dob'])) {
+        if (array_key_exists('dob',$data)) {
             $volunteer->update(['dob' => $data['dob']]);
         }
 
-        if (isset($data['nationality'])) {
+        if (array_key_exists('nationality',$data)) {
             $volunteer->update(['nationality_id' => Countries::where('nationality', $data['nationality'])->value('id')]);
         }
 
         //?????????????
-        if (isset($data['cv'])) {
-            $volunteer->update(['cv' => $data['cv']]);
-        }
+//        if (isset($data['cv'])) {
+//            $volunteer->update(['cv' => $data['cv']]);
+//        }
 
-        if (isset($data['facebook'])) {
+        if (array_key_exists('facebook',$data)) {
             $volunteer->update(['facebook' => $data['facebook']]);
         }
 
-        if (isset($data['linkedIn'])) {
+        if (array_key_exists('linkedIn',$data)) {
             $volunteer->update(['linkedIn' => $data['linkedIn']]);
         }
 
-        if (isset($data['twitter'])) {
+        if (array_key_exists('twitter',$data)) {
             $volunteer->update(['twitter' => $data['twitter']]);
         }
 
-        if (isset($data['skype'])) {
+        if (array_key_exists('skype',$data)) {
             $volunteer->update(['skype' => $data['skype']]);
         }
 
-        if (isset($data['phone_number'])) {
+         if (array_key_exists('instagram',$data)) {
+             $volunteer->update(['instagram' => $data['instagram']]);
+         }
+
+        if (array_key_exists('phone_number',$data)) {
             $volunteer->update(['phone_number' => $data['phone_number']]);
         }
 
-        if (isset($data['skills'])) {
+        if (array_key_exists('skills',$data)) {
             $volunteer->update(['skills' => $data['skills']]);
         }
 
-        if (isset($data['my_causes'])) {
+        if (array_key_exists('my_causes',$data)) {
             $volunteer->update(['my_causes' => $data['my_causes']]);
         }
 
-        if (isset($data['city'])) {
+        if (array_key_exists('city',$data)) {
             $volunteer->update(['location_id' => Cities::where('name',$data['city'])->value('id')]);
         }
 
@@ -307,9 +313,14 @@ class VolunteersService
         $volunteer_id = $this->model->byUuid($request['volunteer_uuid'])->value('id');
         $volunteer_favorite_organization=VolunteerFavoriteOrganizations::create([
             'volunteer_id' => $volunteer_id,
-            'organization_id' => Organization::where('name', $request['organization_name'])->value('id')
+            //'organization_id' => Organization::where('name', $request['organization_name'])->value('id')
+            'organization_id' => Organization::where('uuid', $request['organization_uuid'])->value('id')
+
         ]);
 
+        return [
+            "message" => "Organization added to favorite organizations"
+        ];
         return $volunteer_favorite_organization;
     }
 
@@ -317,6 +328,10 @@ class VolunteersService
     public function deleteFavoriteOrganization($request) {
         $volunteer_favorite_organization=VolunteerFavoriteOrganizations::byUuid($request['uuid'])->first();
         $volunteer_favorite_organization->delete();
+
+        return [
+            "message" => "Organization removed from favorite organizations"
+        ];
         return response()->noContent();
     }
 
@@ -324,8 +339,13 @@ class VolunteersService
         $volunteer_id = $this->model->byUuid($request['volunteer_uuid'])->value('id');
         $volunteer_favorite_event = VolunteerFavoriteEvents::create([
             'volunteer_id' => $volunteer_id,
-            'event_id' => VolunteeringEvents::where('title',$request['event_name'])->value('id')
+           // 'event_id' => VolunteeringEvents::where('title',$request['event_name'])->value('id')
+            'event_id' => VolunteeringEvents::where('uuid',$request['event_uuid'])->value('id')
         ]);
+
+        return [
+            "message" => "Event added to favorite events"
+        ];
 
         return $volunteer_favorite_event;
     }
@@ -333,6 +353,10 @@ class VolunteersService
     public function deleteFavoriteEvent($request) {
         $volunteer_favorite_event=VolunteerFavoriteEvents::byUuid($request['uuid'])->first();
         $volunteer_favorite_event->delete();
+
+        return [
+            "message" => "Event removed from favorite events"
+        ];
         return response()->noContent();
     }
 
@@ -358,7 +382,8 @@ class VolunteersService
             'comment_uuid' => $comment->uuid,
             'body' => $comment->description,
             'created_date' => $createdAt->format('M d Y'),
-            'creator' => ($comment->creator) ? $comment->creator->name : null
+            'creator' => ($comment->creator) ? $comment->creator->name : null,
+            'creator_id' => Auth::user()->id
         ];
 
         return $comment;

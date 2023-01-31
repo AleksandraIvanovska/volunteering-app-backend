@@ -95,13 +95,22 @@ class UsersController extends Controller
             return response(['message' => 'Invalid credentials'],400);
         }
 
-        $accessToken=auth()->user()->createToken('authToken')->accessToken;
+        $accessToken = auth()->user()->createToken('authToken')->accessToken;
 
         if ($this->isVolunteer(auth()->user())) {
             $uuid = auth()->user()->volunteer['uuid'];
+            if (auth()->user()->volunteer['deleted_at']) {
+                auth()->user()->volunteer['deleted_at'] = null;
+                auth()->user()->volunteer->save();
+            }
         } else {
             $uuid = auth()->user()->organization['uuid'];
+            if (auth()->user()->organization['deleted_at']) {
+                auth()->user()->organization['deleted_at'] = null;
+                auth()->user()->organization->save();
+            }
         }
+
 
         return response(['user' => auth()->user(), 'access_token' => $accessToken, 'uuid' => $uuid]);
     }

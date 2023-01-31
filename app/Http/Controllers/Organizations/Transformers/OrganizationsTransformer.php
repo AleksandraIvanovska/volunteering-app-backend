@@ -44,6 +44,9 @@ class OrganizationsTransformer extends TransformerAbstract
             $response->push([
                 'contact_uuid' => $contact->uuid,
                 'name' => $contact->name,
+                'first_name' => $contact->first_name,
+                'middle_name' => $contact->middle_name,
+                'last_name' => $contact->last_name,
                 'email' => $contact->email,
                 'facebook' => $contact->facebook,
                 'skype' => $contact->skype,

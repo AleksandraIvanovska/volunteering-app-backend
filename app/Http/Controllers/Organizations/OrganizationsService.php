@@ -64,7 +64,7 @@ class OrganizationsService
             });
         }
 
-        $organizations = $organizations->get();
+        $organizations = $organizations->orderBy('created_at', 'asc')->get();
         return $organizations->map(function ($item) {
             return $this->getByUuid($item->uuid);
         });
@@ -76,7 +76,9 @@ class OrganizationsService
                 'user' => function($query) {
                     $query->select('id','email','role_id');
                 },
-                'user.commentReceiver',
+                'user.commentReceiver' => function ($query) {
+                    $query->orderBy('created_at', 'desc');
+                },
                 'location.country' => function ($query) {
                     $query->select('id','name','countries.id','countries.name');
                 },
@@ -136,6 +138,7 @@ class OrganizationsService
 
         if (array_key_exists('photo', $data)) {
             $organization->update(['photo' => $data['photo']]);
+            $organization->save();
         }
 
         if (array_key_exists('city', $data)) {
@@ -149,6 +152,14 @@ class OrganizationsService
 
         if (array_key_exists('facebook', $data)) {
             $organization->update(['facebook' => $data['facebook']]);
+        }
+
+        if (array_key_exists('twitter', $data)) {
+            $organization->update(['twitter' => $data['twitter']]);
+        }
+
+        if (array_key_exists('instagram', $data)) {
+            $organization->update(['instagram' => $data['instagram']]);
         }
 
         if (array_key_exists('linkedIn',$data)) {
@@ -245,7 +256,8 @@ class OrganizationsService
             'comment_uuid' => $comment->uuid,
             'body' => $comment->description,
             'created_date' => $createdAt->format('M d Y'),
-            'creator' => ($comment->creator) ? $comment->creator->name : null
+            'creator' => ($comment->creator) ? $comment->creator->name : null,
+            'creator_id' => Auth::user()->id
         ];
     }
 

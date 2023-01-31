@@ -26,6 +26,12 @@ $api->version('v1', function ($api) {
         $api->group(['prefix' => 'users'], function ($api) {
             $api->post('/register', 'Users\UsersController@register');
             $api->post('/login', 'Users\UsersController@login');
+            $api->post('/forgotPassword', 'Users\UsersController@forgotPassword');
+        });
+
+        $api->group(['prefix' => 'password'], function ($api) {
+            $api->post('/email', 'Users\UsersController@sendResetLinkEmail');
+            $api->post('/reset', 'Users\UsersController@reset');
         });
 
         $api->group(['middleware' => ['auth:api']], function ($api) {

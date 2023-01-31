@@ -28,7 +28,7 @@ class VolunteersTransformer extends TransformerAbstract
             'photo' => isset($volunteer->photo) ? $volunteer->photo : null,
             'genderType' => isset($volunteer->genderType) ? $volunteer->genderType : null,
             'nationality' => isset($volunteer->nationality) ? $volunteer->nationality : null,
-            'dob' => isset($volunteer->dob) ? $volunteer->dob : null,
+            'dob' => isset($volunteer->dob) ? Carbon::parse($volunteer->dob)->format('m-d-Y') : null,
             'asset' => isset($volunteer->asset) ? $this->transformAsset($volunteer->asset) : null,
             'facebook' => isset($volunteer->facebook) ? $volunteer->facebook : null,
             'twitter' => isset($volunteer->twitter) ? $volunteer->twitter : null,
@@ -182,7 +182,8 @@ class VolunteersTransformer extends TransformerAbstract
                 'country' => $event->volunteeringLocation['location']['country']['name']
             ] : null,
             'start_date' => isset($event->start_date) ? $event->start_date : null,
-            'end_date' => isset($event->end_date) ? $event->end_date : null
+            'end_date' => isset($event->end_date) ? $event->end_date : null,
+            'favorite_event_uuid' => $event->pivot->uuid
         ];
     }
 
@@ -203,6 +204,7 @@ class VolunteersTransformer extends TransformerAbstract
                 'city' => $organization->location['name'],
                 'country' => $organization->location['country']['name']
              ] : null,
+            'favorite_organization_uuid' => $organization->pivot->uuid
 
             ];
     }

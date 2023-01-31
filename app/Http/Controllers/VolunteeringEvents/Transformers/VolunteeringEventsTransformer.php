@@ -5,6 +5,7 @@ namespace App\Http\Controllers\VolunteeringEvents\Transformers;
 
 
 use App\Resources;
+use Carbon\Carbon;
 
 class VolunteeringEventsTransformer
 {
@@ -25,6 +26,7 @@ class VolunteeringEventsTransformer
             'average_hours_per_day' => isset($volunteeringEvent->average_hours_per_day) ? $volunteeringEvent->average_hours_per_day : null,
             'duration' => isset($volunteeringEvent->duration) ? $volunteeringEvent->duration : null,
             'deadline' => isset($volunteeringEvent->deadline) ? $volunteeringEvent->deadline : null,
+            'todayDate' => Carbon::now(),
             'expiration' => isset($volunteeringEvent->expiration) ?  $volunteeringEvent->expiration : null,
             'status' => isset($volunteeringEvent->status) ? $volunteeringEvent->status : null,
             'volunteers_needed' => isset($volunteeringEvent->volunteers_needed) ?  $volunteeringEvent->volunteers_needed : null,
@@ -40,7 +42,7 @@ class VolunteeringEventsTransformer
             'skills_needed' => isset($volunteeringEvent->skills_needed) ?  $volunteeringEvent->skills_needed : null,
             'tags' => isset($volunteeringEvent->tags) ? $volunteeringEvent->tags : null,
             'notes' => isset($volunteeringEvent->notes) ? $volunteeringEvent->notes : null,
-            'created_at' => isset($volunteeringEvent->created_at) ?  $volunteeringEvent->created_at : null,
+            'created_at' => isset($volunteeringEvent->created_at) ?  date('d-m-Y', strtotime($volunteeringEvent->created_at)) : null,
             'volunteering_location' => isset($volunteeringEvent->volunteeringLocation) ?  $volunteeringEvent->volunteeringLocation : null,
             'assets' => isset($volunteeringEvent->assets) ? $this->transformAssets($volunteeringEvent->assets) : null,
             'contacts' => isset($volunteeringEvent->contacts) ? $this->transformContacts($volunteeringEvent->contacts) : null,
@@ -57,11 +59,11 @@ class VolunteeringEventsTransformer
             'title' => $organization->name,
             'description' => $organization->description,
             'website' => isset($organization->website) ? $organization->website : null,
-            'location' => [
+            'location' => isset($organization->location) ? [
                 'city_id' => $organization->location['id'],
                 'city' => $organization->location['name'],
                 'country' => $organization->location->country['name']
-            ],
+            ] : null,
             'user_id' => $organization->user_id
         ];
     }
@@ -93,6 +95,7 @@ class VolunteeringEventsTransformer
     public function transformAsset($asset) {
         return [
             'uuid' => $asset->uuid,
+            'event_asset_uuid' => $asset->pivot->uuid,
             'url' => url('app/' . $asset['path']),
             'asset_name' => $asset->asset_name
         ];

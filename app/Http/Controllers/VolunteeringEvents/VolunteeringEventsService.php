@@ -6,10 +6,17 @@ namespace App\Http\Controllers\VolunteeringEvents;
 
 use App\Asset;
 use App\Category;
+use App\Cities;
 use App\Contact;
 use App\EventAsset;
 use App\EventContact;
+use App\EventLocation;
+use App\EventRequirements;
 use App\Http\Controllers\VolunteeringEvents\Transformers\VolunteeringEventsTransformer;
+use App\Jobs\Emails\VolunteerAttendedToEventEmail;
+use App\Jobs\Emails\VolunteerEventStatusWasUpdatedByOrganizationEmail;
+use App\Jobs\Emails\VolunteerEventStatusWasUpdatedByVolunteerEmail;
+use App\Jobs\Notifications\VolunteerAttendedToEvent;
 use App\Mail\VolunteerInvitation;
 use App\Organization;
 use App\Resources;
@@ -143,7 +150,7 @@ class VolunteeringEventsService
             'assets',
             'contacts',
             'requirements' => function($query) {
-                $query->select('id','event_id','driving_license','minimum_age','languages','orientation','background_check','other');
+                $query->select('id','uuid' ,'event_id','driving_license','minimum_age','languages','orientation','background_check','other');
             },
             'volunteerFavorites',
             'volunteerAttendance',
@@ -155,11 +162,11 @@ class VolunteeringEventsService
     }
 
     public function create(Request $request) {
-       // return $request;
         $volunteeringEvent = $this->model->create([
             'title' => $request['title'],
             'description' => isset($request['description']) ? $request['description'] : null,
-            'organization_id' => Organization::where('name',$request['organization'])->value('id'),
+            //'organization_id' => Organization::where('name',$request['organization'])->value('id'),
+            'organization_id' => Auth::user()->organization->id,
             'category_id' => Category::where('value', $request['category']['value'])->value('id'),
             'is_virtual' => $request['is_virtual'],
             'ongoing' => 0, //e 1 ako e Happening now
@@ -170,7 +177,7 @@ class VolunteeringEventsService
             'duration_id' => Resources::where('value', $request['duration']['value'])->value('id'),
             'deadline' => $request['deadline'],
             'expired_id' => Resources::where('type','expired_type')->where('value','active')->value('id'),
-            'status_id' => Resources::where('value',$request['status']['value'])->value('id'),
+            'status_id' => Resources::where('value', $request['status']['value'])->value('id'),
             'volunteers_needed' => $request['volunteers_needed'],
             'spaces_available' => $request['volunteers_needed'],
             'great_for_id' => Resources::where('value',$request['great_for']['value'])->value('id'),
@@ -179,12 +186,39 @@ class VolunteeringEventsService
             'food' => $request['food'],
             'transport' => $request['transport'],
             'benefits' => $request['benefits'],
-            'skills_needed' => (is_array($request['skills_needed']) && !empty($request['skills_needed'])) ? json_encode($request['skills_needed']) : null,
+            'skills_needed' => (is_array($request['skills_needed']) && !empty($request['skills_needed'])) ? $request['skills_needed'] : null,
             'tags' => (is_array($request['tags']) && !empty($request['tags'])) ? json_encode($request['tags']) : null,
             'notes' => $request['notes'],
-            'virtual_info' => $request['virtual_info']
+            'virtual_info' => $request['virtual_info'] ?? null
         ]);
 
+        if (isset($request['location']) && isset($request['location']['city'])) {
+            EventLocation::create([
+                'event_id' => $volunteeringEvent->id,
+                'location_id' => Cities::where('name', $request['location']['city'])->value('id'),
+                'address' => $request['location']['address'] ?? null,
+                'show_map' => $request['location']['show_map'] ?? null,
+                'longitude' => $request['location']['longitude'] ?? null,
+                'latitude' => $request['location']['latitude'] ?? null,
+                'postal_code' => $request['location']['postal_code'] ?? null
+            ]);
+        }
+
+        if (isset($request['requirements'])) {
+            EventRequirements::create([
+                'event_id' => $volunteeringEvent->id,
+                'driving_license' => isset($request['requirements']['driving_license']) ? $request['requirements']['driving_license'] : null,
+                'minimum_age' => isset($request['requirements']['min_age']) ? $request['requirements']['min_age'] : null,
+                'languages' => isset($request['requirements']['languages']) ? json_encode($request['requirements']['languages']) : null,
+                'orientation' => isset($request['requirements']['orientation']) ? $request['requirements']['orientation'] : null,
+                'background_check' => isset($request['requirements']['background_check']) ? $request['requirements']['background_check'] : null,
+                'other' => isset($request['requirements']['other']) ? json_encode($request['requirements']['other']) : null
+            ]);
+        }
+
+        return [
+            "message" => "Volunteering Event has been successfully created"
+        ];
         return $volunteeringEvent;
     }
 
@@ -344,10 +378,11 @@ class VolunteeringEventsService
     }
 
     public function deleteEventAsset($request) {
-        $event_asset=EventAsset::byUuid($request['event_asset_uuid'])->first();
-        $asset=Asset::where('id', $event_asset['asset_id'])->first();
-        $asset->delete();
-        Storage::delete($asset['path']);
+        $event_asset = EventAsset::byUuid($request['event_asset_uuid'])->first();
+//        $asset = Asset::where('id', $event_asset['asset_id'])->first();
+//        $asset->delete();
+//        Storage::delete($asset['path']);
+
         $event_asset->delete();
 
         return [
@@ -393,44 +428,39 @@ class VolunteeringEventsService
     public function createVolunteerInvitation($request) {
         $volunteering_event = $this->model->byUuid($request['event_uuid'])->first();
         $volunteer_status = Resources::where('value', $request['status']['value'])->first();
-
         $volunteer_id = Volunteer::where('user_id',$request['volunteer_id'])->value('id');
-      //  return $status;
         $volunteer_event_invitation = VolunteerEventInvitations::create([
             'event_id' => $volunteering_event['id'],
-            //'volunteer_id' => $request['volunteer_id'],
             'volunteer_id' => $volunteer_id,
             'status_id' => $volunteer_status['id'],
             'status' => $volunteer_status['description']
         ]);
 
-        //SEND EMAIL AND NOTIFICATION
-        //IF VOLUNTEER REQUESTS // IF ORGANIZATION INVITES HIM ??????????
-        //IFS FOR EVERY STATUS
-        //OR HERE WE CAN HAVE ONLY INVITATION SENT AND REQUEST SENT ??
 
-        //only organizations can do this (check when making frontend)
+        $volunteer = Volunteer::where('id', $volunteer_event_invitation['volunteer_id'])->with('user')->first();
+
         if ('invitation_sent' == $request['status']['value']) {
             NotificationInvitation::dispatch($volunteering_event, Auth::user(), Volunteer::find($volunteer_event_invitation['volunteer_id']));
-           // $user = Volunteer::where('id', $volunteer_event_invitation['volunteer_id'])->with(['user'])->first();
-            //$email=$user->user['email'];
-           // Mail::to($email)->send(new VolunteerInvitation($volunteer_event_invitation,Auth::user()));
+            EmailInvitation::dispatch($volunteering_event, Auth::user(), $volunteer);
         }
 
-        //only volunteers can do this
         if ('request_sent' == $request['status']['value']) {
             $user = $this->model->where('id', $volunteering_event['id'])->with(['organization.user'])->first();
-            NotificationRequest::dispatch($volunteering_event, Auth::user(), Volunteer::find($volunteer_event_invitation['volunteer_id']), $user->organization['user']['id']);
+            $volunteer = Volunteer::find($volunteer_event_invitation['volunteer_id']);
+            NotificationRequest::dispatch($volunteering_event, Auth::user(), $volunteer, $user->organization['user']['id']);
+            EmailRequest::dispatch($volunteering_event, Auth::user(), $user->organization['user']);
         }
 
 
-//        if ('attended' == $request['status']['value']) {
-//            $volunteer_event_attendance = VolunteerEventAttendance::create([
-//                'event_id' => $volunteering_event['id'],
-//                'volunteer_id' => $request['volunteer_id']
-//            ]);
-//            //SEND EMAIL AND NOTIFICATION
-//        }
+        //This will never happen
+        if ('attended' == $request['status']['value']) {
+            $volunteer_event_attendance = VolunteerEventAttendance::create([
+                'event_id' => $volunteering_event['id'],
+                'volunteer_id' => $volunteer_id
+            ]);
+            VolunteerAttendedToEvent::dispatch($volunteering_event, Auth::user(), $volunteer);
+            VolunteerAttendedToEventEmail::dispatch($volunteering_event, Auth::user(), $volunteer);
+        }
 
 
         return [
@@ -446,41 +476,39 @@ class VolunteeringEventsService
         $volunteer_invitation = VolunteerEventInvitations::byUuid($request['uuid'])->first();
         $volunteer_status = Resources::where('value', $request['status'])->first();
 
-
         if (isset($request['status'])) {
             $volunteer_invitation->update(['status' => $volunteer_status['description'], 'status_id' => $volunteer_status['id']]);
         }
 
-        //SEND MAIL AND NOTIFICATION AFTER CHANGE
 
-
-        //IF APPROVED BY VOLUNTEER SEND  TO ORGANIZATION
         $volunteering_event = $this->model->where('id', $volunteer_invitation['event_id'])->first();
         if ('invitation_approved' != $request['status'] && 'invitation_rejected' != $request['status'] && 'invitation_canceled' != $request['status']) {
-            NotificationStatusUpdateByOrganization::dispatch($volunteering_event, $volunteer_status, Auth::user(), Volunteer::find($volunteer_invitation['volunteer_id']));
+            $volunteer = Volunteer::where('id', $volunteer_invitation['volunteer_id'])->with('user')->first();
+            NotificationStatusUpdateByOrganization::dispatch($volunteering_event, $volunteer_status, Auth::user(), $volunteer);
+            VolunteerEventStatusWasUpdatedByOrganizationEmail::dispatch($volunteering_event, $volunteer_status, Auth::user(), $volunteer);
         }
         else {
             $user = $this->model->where('id', $volunteer_invitation['event_id'])->with(['organization.user'])->first();
             NotificationStatusUpdateByVolunteer::dispatch($volunteering_event, $volunteer_status, Auth::user(), $user->organization['user']['id']);
+            VolunteerEventStatusWasUpdatedByVolunteerEmail::dispatch($volunteering_event, $volunteer_status, Auth::user(), $user->organization['user']);
         }
 
         if ('invitation_approved' == $request['status'] || 'request_approved' == $request['status']) {
-            if ($volunteering_event->volunteers_needed){
-                $num_volunteers = ($volunteering_event->volunteers_needed)-1;
-                $volunteering_event->update(['volunteers_needed' => $num_volunteers]);
+            if ($volunteering_event->spaces_available){
+                $num_volunteers = ($volunteering_event->spaces_available)-1;
+                $volunteering_event->update(['spaces_available' => $num_volunteers]);
             }
-
         }
 
-            //IF ATTENDED CALL ANOTHER ROUTE OR CREATE NEW RECORD HERE
         if ('attended' == $request['status']) {
             $volunteer_event_attendance = VolunteerEventAttendance::create([
                 'event_id' => $volunteer_invitation->event_id,
                 'volunteer_id' => $volunteer_invitation->volunteer_id
             ]);
 
-
-            //SEND EMAIL AND NOTIFICATION
+            $volunteer = Volunteer::where('id', $volunteer_event_attendance['volunteer_id'])->with('user')->first();
+            VolunteerAttendedToEvent::dispatch($volunteering_event, Auth::user(), $volunteer);
+            VolunteerAttendedToEventEmail::dispatch($volunteering_event, Auth::user(), $volunteer);
         }
 
         return [
@@ -497,7 +525,6 @@ class VolunteeringEventsService
         $volunteer_invitation->delete();
         return response()->noContent();
     }
-
 
 
 }
