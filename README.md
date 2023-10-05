@@ -21,6 +21,8 @@ Main components:
 
 Organizations organize events for volunteers and can invite volunteers on those events, meanwhile they can review their profiles and based on their experience, education and skills determine whether they are suitable for that event. Volunteers can also search for volunteering events, filter them by city, state, category, age group, etc. and apply to them. Also in the application I keep records of the volunteers in which events they have participated and the organizations which events they have organized and many other detailed information about the volunteers, organizations and events.
 
+Link to video -> https://www.dropbox.com/s/u8r2dv29y1iw3p4/volunteerup_video.mp4?dl=0
+
 
 ## About Laravel
 
